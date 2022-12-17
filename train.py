@@ -9,16 +9,16 @@ import model
 import mlflow
 
 # Variables
-BATCH_SIZE = 64
-EPOCHS = 2
+BATCH_SIZE = 2**4
+EPOCHS = 10
 # Change device to mps / cpu
 # pick_device = 'cpu'
-pick_device = 'mps'
+pick_device = 'cpu'
 DEVICE = torch.device(pick_device)
 # Downloading the dataset
 trainset = datasets.MNIST(root='data/dataset', train=True, transform=transforms.ToTensor(), download=True)
 testset = datasets.MNIST(root='data/testset', transform=transforms.ToTensor(), download=True)
-
+# mlflow.autolog()
 # Filter for only two classes #TODO Not sure yet if it is needed
 # TODO Do we need to normalize the data, or is it already done?
 
@@ -53,6 +53,7 @@ def test(dataloader, model_test, loss_fn):
 mlflow.start_run()
 mlflow.log_param('epochs', EPOCHS)
 mlflow.log_param('batch_size', BATCH_SIZE)
+mlflow.log_param('pick_device', pick_device)
 
 accuracy, avg_loss = 0,0
 for epoch in range(EPOCHS):
