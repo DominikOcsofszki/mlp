@@ -11,16 +11,17 @@ import VAE
 from tqdm import tqdm
 
 # Variables
+TEST_ONLY_LAST = True
 MOMENTUM = 0.9
 LR_RATE = 2e-2
-BATCH_SIZE = 16
-EPOCHS = 1
+BATCH_SIZE = 64
+EPOCHS = 10
 pick_device = 'cpu'
 DEVICE = torch.device(pick_device)  # alternative 'mps' - but no speedup...
 
 
-model = model.MyModel5().to(DEVICE)
-# model = VAE.VAE().to(DEVICE)
+# model = model.MyModel5().to(DEVICE)
+model = VAE.VAE().to(DEVICE)
 print(model.__class__.__name__)
 
 # Downloading the dataset
@@ -100,8 +101,12 @@ for epoch in range(EPOCHS):
         # if i % 200 == 199:
         #     print(f'[{epoch + 1}, {i + 1:5d}] loss: {running_loss / 200:.3f}')
         #     running_loss = 0.0
-    print(f'{epoch = }')
+    if not TEST_ONLY_LAST :
+        print(f'{epoch +1 = }')
+        accuracy, avg_loss = test(testsetloader, model, criterion)
+if TEST_ONLY_LAST :
     accuracy, avg_loss = test(testsetloader, model, criterion)
+
 mlflow.log_param('accuracy', accuracy)
 mlflow.log_param('avg_loss', avg_loss)
 
