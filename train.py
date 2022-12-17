@@ -7,16 +7,20 @@ import torch.utils.data
 import torch.nn as nn
 import model
 import mlflow
+import VAE
+from tqdm import tqdm
 
 # Variables
-BATCH_SIZE = 128
+MOMENTUM = 0.9
+LR_RATE = 2e-2
+BATCH_SIZE = 16
 EPOCHS = 1
 pick_device = 'cpu'
 DEVICE = torch.device(pick_device)  # alternative 'mps' - but no speedup...
 
-# PICKED_MODEL = model.MyModel4
-# model = PICKED_MODEL().to(DEVICE)
+
 model = model.MyModel5().to(DEVICE)
+# model = VAE.VAE().to(DEVICE)
 print(model.__class__.__name__)
 
 # Downloading the dataset
@@ -33,7 +37,8 @@ testsetloader = torch.utils.data.DataLoader(testset, batch_size=BATCH_SIZE, shuf
 
 
 criterion = nn.CrossEntropyLoss()
-optimizer = optim.SGD(model.parameters(), lr=1e-3, momentum=0.9)
+optimizer = optim.SGD(model.parameters(), lr=LR_RATE, momentum=MOMENTUM)
+# optimizer = optim.SGD(model.parameters(), lr=1e-3)
 
 
 # Test function
@@ -60,6 +65,8 @@ def test(dataloader, model_test, loss_fn):
 mlflow.start_run()
 
 mlflow.log_param('epochs', EPOCHS)
+mlflow.log_param('LR_RATE', LR_RATE)
+mlflow.log_param('MOMENTUM', MOMENTUM)
 mlflow.log_param('batch_size', BATCH_SIZE)
 mlflow.log_param('pick_device', pick_device)
 model_entries = [entry for entry in model.modules()]  ##need to ignore other files!?!?<<<<<<<<
@@ -68,11 +75,13 @@ mlflow.log_param('model_name', model.__class__.__name__)
 
 
 accuracy, avg_loss = 0, 0
+
 for epoch in range(EPOCHS):
 
     running_loss = 0.0
-
-    for i, data in enumerate(trainloader, 0):  # index = 0 could be deleted
+    loop = tqdm(enumerate(trainloader))
+    # for i, data in enumerate(trainloader, 0):  # index = 0 could be deleted
+    for i, data in loop:  # index = 0 could be deleted
 
         X, y = data
         X, y = X.to(DEVICE), y.to(DEVICE)

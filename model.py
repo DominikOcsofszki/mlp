@@ -99,6 +99,7 @@ class MyModel5(nn.Module):
         # print(x.shape)
         x = torch.flatten(x, 1)
         # print(x.shape)
+        # print(x.shape)
         x = self.fc1(x)
         # print(x.shape)
         x = self.fc2(x)
