@@ -10,6 +10,10 @@ import model
 # Variables
 BATCH_SIZE = 64
 EPOCHS = 3
+# Change device to mps / cpu
+# pick_device = 'cpu'
+pick_device = 'mps'
+DEVICE = torch.device(pick_device)
 # Downloading the dataset
 trainset = datasets.MNIST(root='data/dataset', train=True, transform=transforms.ToTensor(), download=True)
 testset = datasets.MNIST(root='data/testset', transform=transforms.ToTensor(), download=True)
@@ -22,24 +26,26 @@ trainloader = torch.utils.data.DataLoader(trainset, batch_size=BATCH_SIZE, shuff
 testsetloader = torch.utils.data.DataLoader(testset, batch_size=BATCH_SIZE, shuffle=True)
 
 # Loss function and optimizer
-model = model.MyModel()
+model = model.MyModel().to(DEVICE)
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.SGD(model.parameters(), lr=1e-3, momentum=0.9)
 
+
 # Test function
-def test(dataloader,model_test,loss_fn) :
+def test(dataloader, model_test, loss_fn):
     size = len(dataloader.dataset)
     num_batches = len(dataloader)
     model_test.eval()
-    test_loss, correct = 0,0
-    with torch.no_grad() :
+    test_loss, correct = 0, 0
+    with torch.no_grad():
         for X, y in dataloader:
+            X, y = X.to(DEVICE), y.to(DEVICE)
             pred = model_test(X)
-            test_loss += loss_fn(pred,y).item()
-            correct += (pred.argmax(1)==y).type(torch.float).sum().item()
+            test_loss += loss_fn(pred, y).item()
+            correct += (pred.argmax(1) == y).type(torch.float).sum().item()
     test_loss /= num_batches
-    correct/=size
-    print(f'Test Error:  Accuracy: {(100*correct):>0.1f}%, Avg loss: {test_loss:>8f}\n')
+    correct /= size
+    print(f'Test Error:  Accuracy: {(100 * correct):>0.1f}%, Avg loss: {test_loss:>8f}\n')
 
 
 for epoch in range(EPOCHS):
@@ -48,6 +54,8 @@ for epoch in range(EPOCHS):
     for i, data in enumerate(trainloader, 0):  # index = 0 could be deleted
 
         X, y = data
+        X, y = X.to(DEVICE), y.to(DEVICE)
+
         # X = X.permute(0,1,2,3)
         # print(X.shape)
         optimizer.zero_grad()
