@@ -1,0 +1,15 @@
+artifact_uri: file:///Users/dominikocsofszki/PycharmProjects/mlp/mlruns/0/6870a11c5a0549f69357510bb89c6b5e/artifacts
+end_time: 1671253400092
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 6870a11c5a0549f69357510bb89c6b5e
+run_name: rebellious-wren-531
+run_uuid: 6870a11c5a0549f69357510bb89c6b5e
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1671253370528
+status: 3
+tags: []
+user_id: dominikocsofszki

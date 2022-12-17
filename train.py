@@ -6,10 +6,11 @@ import torch.optim as optim
 import torch.utils.data
 import torch.nn as nn
 import model
+import mlflow
 
 # Variables
 BATCH_SIZE = 64
-EPOCHS = 3
+EPOCHS = 2
 # Change device to mps / cpu
 # pick_device = 'cpu'
 pick_device = 'mps'
@@ -46,9 +47,16 @@ def test(dataloader, model_test, loss_fn):
     test_loss /= num_batches
     correct /= size
     print(f'Test Error:  Accuracy: {(100 * correct):>0.1f}%, Avg loss: {test_loss:>8f}\n')
+    mlflow.log_param('epochs', EPOCHS)
+    return (100 * correct), test_loss
 
+mlflow.start_run()
+mlflow.log_param('epochs', EPOCHS)
+mlflow.log_param('batch_size', BATCH_SIZE)
 
+accuracy, avg_loss = 0,0
 for epoch in range(EPOCHS):
+
     running_loss = 0.0
 
     for i, data in enumerate(trainloader, 0):  # index = 0 could be deleted
@@ -72,6 +80,14 @@ for epoch in range(EPOCHS):
         #     print(f'[{epoch + 1}, {i + 1:5d}] loss: {running_loss / 200:.3f}')
         #     running_loss = 0.0
     print(f'{epoch = }')
-    test(testsetloader, model, criterion)
+    accuracy, avg_loss = test(testsetloader, model, criterion)
+mlflow.log_param('accuracy', accuracy)
+mlflow.log_param('avg_loss', avg_loss)
+
 
 print('finish!!!')
+PATH = '/Users/dominikocsofszki/PycharmProjects/mlp/data/weights/weights_training'
+
+print(f'save weights at {PATH = }')
+torch.save(model.state_dict(), PATH)
+

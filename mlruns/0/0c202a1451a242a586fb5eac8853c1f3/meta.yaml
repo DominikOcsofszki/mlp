@@ -1,0 +1,15 @@
+artifact_uri: file:///Users/dominikocsofszki/PycharmProjects/mlp/mlruns/0/0c202a1451a242a586fb5eac8853c1f3/artifacts
+end_time: 1671253549104
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 0c202a1451a242a586fb5eac8853c1f3
+run_name: aged-horse-332
+run_uuid: 0c202a1451a242a586fb5eac8853c1f3
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1671253538896
+status: 3
+tags: []
+user_id: dominikocsofszki

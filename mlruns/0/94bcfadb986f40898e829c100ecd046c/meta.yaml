@@ -1,0 +1,15 @@
+artifact_uri: file:///Users/dominikocsofszki/PycharmProjects/mlp/mlruns/0/94bcfadb986f40898e829c100ecd046c/artifacts
+end_time: 1671254178399
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 94bcfadb986f40898e829c100ecd046c
+run_name: vaunted-ram-342
+run_uuid: 94bcfadb986f40898e829c100ecd046c
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1671254157999
+status: 3
+tags: []
+user_id: dominikocsofszki

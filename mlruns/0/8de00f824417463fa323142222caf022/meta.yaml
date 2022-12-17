@@ -1,0 +1,15 @@
+artifact_uri: file:///Users/dominikocsofszki/PycharmProjects/mlp/mlruns/0/8de00f824417463fa323142222caf022/artifacts
+end_time: 1671254075429
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 8de00f824417463fa323142222caf022
+run_name: nimble-hen-628
+run_uuid: 8de00f824417463fa323142222caf022
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1671254055342
+status: 3
+tags: []
+user_id: dominikocsofszki

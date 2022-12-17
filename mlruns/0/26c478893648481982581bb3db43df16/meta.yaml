@@ -1,0 +1,15 @@
+artifact_uri: file:///Users/dominikocsofszki/PycharmProjects/mlp/mlruns/0/26c478893648481982581bb3db43df16/artifacts
+end_time: 1671253725579
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 26c478893648481982581bb3db43df16
+run_name: intrigued-squid-549
+run_uuid: 26c478893648481982581bb3db43df16
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1671253715177
+status: 3
+tags: []
+user_id: dominikocsofszki
