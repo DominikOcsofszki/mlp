@@ -9,19 +9,21 @@ import model
 import mlflow
 import VAE
 from tqdm import tqdm
-
+import real_vae
 # Variables
-TEST_ONLY_LAST = True
+TEST_ONLY_LAST = False
 MOMENTUM = 0.9
-LR_RATE = 2e-2
+# LR_RATE = 2e-2
+LR_RATE = 2e-3
 BATCH_SIZE = 64
-EPOCHS = 10
+EPOCHS = 25
 pick_device = 'cpu'
 DEVICE = torch.device(pick_device)  # alternative 'mps' - but no speedup...
 
 
-# model = model.MyModel5().to(DEVICE)
-model = VAE.AE().to(DEVICE)
+model = model.MyModel5().to(DEVICE)
+# model = VAE.AE_relu().to(DEVICE)
+# model = real_vae.VAE(input_dim=28*28).to(DEVICE)
 print(model.__class__.__name__)
 
 # Downloading the dataset
@@ -111,7 +113,8 @@ mlflow.log_param('accuracy', accuracy)
 mlflow.log_param('avg_loss', avg_loss)
 
 print('finish!!!')
-PATH = '/Users/dominikocsofszki/PycharmProjects/mlp/data/weights/weights_training'
+# PATH = '/Users/dominikocsofszki/PycharmProjects/mlp/data/weights/weights_training'
+PATH = '/Users/dominikocsofszki/PycharmProjects/mlp/data/weights/weights_model_classifier'
 
 print(f'save weights at {PATH = }')
 torch.save(model.state_dict(), PATH)
