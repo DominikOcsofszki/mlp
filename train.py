@@ -9,16 +9,19 @@ import model
 import mlflow
 
 # Variables
-BATCH_SIZE = 2**4
-EPOCHS = 10
-# Change device to mps / cpu
-# pick_device = 'cpu'
+BATCH_SIZE = 128
+EPOCHS = 1
 pick_device = 'cpu'
-DEVICE = torch.device(pick_device)
+DEVICE = torch.device(pick_device)  # alternative 'mps' - but no speedup...
+
+# PICKED_MODEL = model.MyModel4
+# model = PICKED_MODEL().to(DEVICE)
+model = model.MyModel5().to(DEVICE)
+print(model.__class__.__name__)
+
 # Downloading the dataset
 trainset = datasets.MNIST(root='data/dataset', train=True, transform=transforms.ToTensor(), download=True)
 testset = datasets.MNIST(root='data/testset', transform=transforms.ToTensor(), download=True)
-# mlflow.autolog()
 # Filter for only two classes #TODO Not sure yet if it is needed
 # TODO Do we need to normalize the data, or is it already done?
 
@@ -27,7 +30,8 @@ trainloader = torch.utils.data.DataLoader(trainset, batch_size=BATCH_SIZE, shuff
 testsetloader = torch.utils.data.DataLoader(testset, batch_size=BATCH_SIZE, shuffle=True)
 
 # Loss function and optimizer
-model = model.MyModel().to(DEVICE)
+
+
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.SGD(model.parameters(), lr=1e-3, momentum=0.9)
 
@@ -50,12 +54,20 @@ def test(dataloader, model_test, loss_fn):
     mlflow.log_param('epochs', EPOCHS)
     return (100 * correct), test_loss
 
+
+# Init for mlflow
+# mlflow.start_run(experiment_id='new')
 mlflow.start_run()
+
 mlflow.log_param('epochs', EPOCHS)
 mlflow.log_param('batch_size', BATCH_SIZE)
 mlflow.log_param('pick_device', pick_device)
+model_entries = [entry for entry in model.modules()]  ##need to ignore other files!?!?<<<<<<<<
+# mlflow.log_param('model_entries', model_entries)    #TODO Problem since to long
+mlflow.log_param('model_name', model.__class__.__name__)
 
-accuracy, avg_loss = 0,0
+
+accuracy, avg_loss = 0, 0
 for epoch in range(EPOCHS):
 
     running_loss = 0.0
@@ -68,7 +80,6 @@ for epoch in range(EPOCHS):
         # X = X.permute(0,1,2,3)
         # print(X.shape)
         optimizer.zero_grad()
-
         pred = model(X)
         loss = criterion(pred, y)
 
@@ -85,10 +96,8 @@ for epoch in range(EPOCHS):
 mlflow.log_param('accuracy', accuracy)
 mlflow.log_param('avg_loss', avg_loss)
 
-
 print('finish!!!')
 PATH = '/Users/dominikocsofszki/PycharmProjects/mlp/data/weights/weights_training'
 
 print(f'save weights at {PATH = }')
 torch.save(model.state_dict(), PATH)
-
