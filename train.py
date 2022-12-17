@@ -14,14 +14,15 @@ import real_vae
 TEST_ONLY_LAST = False
 MOMENTUM = 0.9
 # LR_RATE = 2e-2
+
 LR_RATE = 2e-3
 BATCH_SIZE = 64
-EPOCHS = 5
+EPOCHS = 10
 pick_device = 'cpu'
 DEVICE = torch.device(pick_device)  # alternative 'mps' - but no speedup...
 
 
-model = model.MyModel6().to(DEVICE)
+model = model.MyModel8().to(DEVICE)
 # model = VAE.AE_relu().to(DEVICE)
 # model = real_vae.VAE(input_dim=28*28).to(DEVICE)
 print(model.__class__.__name__)
@@ -93,6 +94,8 @@ for epoch in range(EPOCHS):
         # print(X.shape)
         optimizer.zero_grad()
         pred = model(X)
+        # print(pred)
+
         loss = criterion(pred, y)
 
         loss.backward()
