@@ -21,7 +21,7 @@ DEVICE = torch.device(pick_device)  # alternative 'mps' - but no speedup...
 
 
 # model = model.MyModel5().to(DEVICE)
-model = VAE.VAE().to(DEVICE)
+model = VAE.AE().to(DEVICE)
 print(model.__class__.__name__)
 
 # Downloading the dataset
@@ -32,7 +32,7 @@ testset = datasets.MNIST(root='data/testset', transform=transforms.ToTensor(), d
 
 # Trainloader
 trainloader = torch.utils.data.DataLoader(trainset, batch_size=BATCH_SIZE, shuffle=True)
-testsetloader = torch.utils.data.DataLoader(testset, batch_size=BATCH_SIZE, shuffle=True)
+testsetloader = torch.utils.data.DataLoader(testset, batch_size=BATCH_SIZE)
 
 # Loss function and optimizer
 
