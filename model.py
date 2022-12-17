@@ -105,3 +105,43 @@ class MyModel5(nn.Module):
         x = self.fc2(x)
         # print(x.shape)
         return x
+
+class MyModel6(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.conv1 = nn.Conv2d(1, 100, kernel_size=3, stride=1, padding=1)
+        self.conv2 = nn.Conv2d(100, 20, kernel_size=3, stride=1, padding=1)
+        self.relu = nn.ReLU()
+        self.fc1 = nn.Linear(20 * 28 * 28, 20)
+        self.fc2 = nn.Linear(20, 10)
+
+        self.softmax = nn.Softmax()
+
+    def forward(self, x):
+        # print(x.shape)
+        x = self.relu(self.conv1(x))
+        # print(x.shape)
+        x = self.relu(self.conv2(x))
+        # print(x.shape)
+        x = torch.flatten(x, 1)
+        # print(x.shape)
+        # print(x.shape)
+        x = self.fc1(x)
+        # print(x.shape)
+        x = self.fc2(x)
+        # print(x.shape)
+        x = self.softmax(x)
+        return x
+
+class MyModel7(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.conv1 = nn.Conv2d(1, 10, kernel_size=3, stride=1, padding=1)
+        self.conv2 = nn.Conv2d(10, 20, kernel_size=3, stride=1, padding=1)
+        self.relu = nn.ReLU()
+        self.fc1 = nn.Linear(20 * 28 * 28, 20)
+        self.fc2 = nn.Linear(20, 10)
+        self.softmax = nn.Softmax(10)
+
+    def forward(self,x):
+        x = self.conv1(x)
