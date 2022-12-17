@@ -17,12 +17,12 @@ MOMENTUM = 0.9
 
 LR_RATE = 2e-3
 BATCH_SIZE = 64
-EPOCHS = 10
+EPOCHS = 5
 pick_device = 'cpu'
 DEVICE = torch.device(pick_device)  # alternative 'mps' - but no speedup...
 
 
-model = model.MyModel8().to(DEVICE)
+model = model.MyModel9().to(DEVICE)
 # model = VAE.AE_relu().to(DEVICE)
 # model = real_vae.VAE(input_dim=28*28).to(DEVICE)
 print(model.__class__.__name__)
@@ -87,7 +87,16 @@ for epoch in range(EPOCHS):
     # for i, data in enumerate(trainloader, 0):  # index = 0 could be deleted
     for i, data in loop:  # index = 0 could be deleted
 
+#TODO normalize???
         X, y = data
+        print(X.shape)
+        print(X.argmax())   ##WHYYY TENSOR 301? Or INDEX 301 in the whole set?
+        max_arg = X.argmax()
+        print(X[max_arg])
+        X = X /255
+        print(X.argmax())
+        print(X[max_arg])
+
         X, y = X.to(DEVICE), y.to(DEVICE)
 
         # X = X.permute(0,1,2,3)
