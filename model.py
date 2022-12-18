@@ -539,8 +539,8 @@ class CNN_6_CONV(nn.Module):
         self.softmax = nn.Softmax(dim=1)
         self.flatten = nn.Flatten()
 
-        self.fc1 = nn.Linear(10,100)
-        self.fc2 = nn.Linear(100,10)
+        self.fc1 = nn.Linear(10, 100)
+        self.fc2 = nn.Linear(100, 10)
 
     def forward(self, x):
         x = self.conv1(x)
@@ -581,11 +581,11 @@ class CNN_6_CONV(nn.Module):
     def print_x_shape(self, x):
         if self.PRINT_ME: print(x.shape)
 
+
 class vae(nn.Module):
     def __init__(self):
         super().__init__()
         self.PRINT_ME = True
-
 
         self.conv1 = nn.Conv2d(1, 10, kernel_size=7)  # 28-6-6-2 = 14
         self.conv2 = nn.Conv2d(10, 20, kernel_size=7)  #
@@ -593,56 +593,295 @@ class vae(nn.Module):
 
         self.conv4 = nn.Conv2d(30, 20, kernel_size=3)  # 14/2 = 7 - 2 = 5
         self.conv5 = nn.Conv2d(20, 10, kernel_size=7)
-        self.maxpool = nn.MaxPool2d(2,2)
+        self.maxpool = nn.MaxPool2d(2, 2)
         # self.conv6 = nn.Conv2d(10, 1, kernel_size=6)
 
         self.softmax = nn.Softmax(dim=1)
         self.flatten = nn.Flatten()
 
-        self.fc1 = nn.Linear(10,100)
-        self.fc2 = nn.Linear(100,10)
+        self.fc1 = nn.Linear(10, 100)
+        self.fc2 = nn.Linear(100, 10)
 
-    def forward__old__(self, x):
-        x = self.conv1(x)
-        x = self.conv2(x)
-        x = self.conv3(x)
-        x = self.conv4(x)
-        x = self.conv5(x)
-        x = self.maxpool(x)
-
-        # x = self.conv6(x)
-        x = self.flatten(x)
-        x = self.fc1(x)
-        x = self.fc2(x)
-        x = self.softmax(x)
-        return x
-
-    def forward(self, x):
-        self.print_x_shape(x)
-        x = self.conv1(x)
-        self.print_x_shape(x)
-        x = self.conv2(x)
-        self.print_x_shape(x)
-        x = self.conv3(x)
-        self.print_x_shape(x)
-        x = self.conv4(x)
-        self.print_x_shape(x)
-        x = self.conv5(x)
-        self.print_x_shape(x)
-        # x = self.conv6(x)
-        x = self.maxpool(x)
-        self.print_x_shape(x)
-        x = self.maxpool(x)
-        self.print_x_shape(x)
-
-        # print(x.shape)
-        x = self.flatten(x)
-        self.print_x_shape(x)
-        x = self.softmax(x)
-        self.print_x_shape(x)
-        if self.PRINT_ME: print(x[0])
-        self.PRINT_ME = False
-        return x
+        self.upsample1 = nn.ConvTranspose2d(in_channels=10, out_channels=10, kernel_size=7, stride=1)
+        self.upsample2 = nn.ConvTranspose2d(10, 10, kernel_size=3, stride=1)
+        self.upsample3 = nn.ConvTranspose2d(10, 10, kernel_size=3, stride=1)
+        self.upsample4 = nn.ConvTranspose2d(10, 10, kernel_size=7, stride=1)
+        self.upsample5 = nn.ConvTranspose2d(10, 10, kernel_size=7, stride=1)
+        self.upsample6 = nn.ConvTranspose2d(10, 10, kernel_size=2, stride=1)
+        self.lin1 = nn.Linear(10 * 28 * 28, 32)
+        self.lin2 = nn.Linear(32, 10)
 
     def print_x_shape(self, x):
         if self.PRINT_ME: print(x.shape)
+
+    def encode(self, x):
+        self.print_x_shape(x)
+        x = self.conv1(x)
+        self.print_x_shape(x)
+        x = self.conv2(x)
+        self.print_x_shape(x)
+        x = self.conv3(x)
+        self.print_x_shape(x)
+        x = self.conv4(x)
+        self.print_x_shape(x)
+        x = self.conv5(x)
+        self.print_x_shape(x)
+        # x = self.conv6(x)
+        x = self.maxpool(x)
+        self.print_x_shape(x)
+        x = self.maxpool(x)
+        # self.print_x_shape(x)
+        return x
+
+    def decode(self, x):
+        if self.PRINT_ME: print('--in-decoder:-----')
+
+        # self.print_x_shape(x)
+        x = self.upsample1(x)
+        self.print_x_shape(x)
+        x = self.upsample2(x)
+        self.print_x_shape(x)
+        x = self.upsample3(x)
+        self.print_x_shape(x)
+        x = self.upsample3(x)
+        self.print_x_shape(x)
+        x = self.upsample3(x)
+        self.print_x_shape(x)
+        x = self.upsample4(x)
+        self.print_x_shape(x)
+        x = self.upsample5(x)
+        self.print_x_shape(x)
+        x = self.upsample6(x)
+        self.print_x_shape(x)
+        if self.PRINT_ME: print('--upsampling-finished:-----')
+
+        if self.PRINT_ME: print('--flattening:-----')
+
+        if self.PRINT_ME: print('--in-decoder-finished:-----')
+
+        return x
+
+    def forward(self, x):
+        if self.PRINT_ME: print('-----encoder:-----')
+        x = self.encode(x)
+        self.print_x_shape(x)
+        if self.PRINT_ME: print('-----decoder:-----')
+        x = self.decode(x)
+        self.print_x_shape(x)
+
+        if self.PRINT_ME: print('-----decoder-finished:-----')
+        x = self.flatten(x)
+        self.print_x_shape(x)
+        x = self.lin1(x)
+        self.print_x_shape(x)
+        x = self.lin2(x)
+        self.print_x_shape(x)
+        x = self.softmax(x)
+        self.print_x_shape(x)
+
+        self.PRINT_ME = False
+        return x
+
+
+class vae2(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.PRINT_ME = True
+
+        self.conv1 = nn.Conv2d(1, 10, kernel_size=7)  # 28-6-6-2 = 14
+        self.conv2 = nn.Conv2d(10, 20, kernel_size=7)  #
+        self.conv3 = nn.Conv2d(20, 30, kernel_size=3)  # 14
+
+        self.conv4 = nn.Conv2d(30, 20, kernel_size=3)  # 14/2 = 7 - 2 = 5
+        self.conv5 = nn.Conv2d(20, 10, kernel_size=7)
+        self.maxpool = nn.MaxPool2d(2, 2)
+        # self.conv6 = nn.Conv2d(10, 1, kernel_size=6)
+
+        self.softmax = nn.Softmax(dim=1)
+        self.flatten = nn.Flatten()
+
+        self.fc1 = nn.Linear(10, 100)
+        self.fc2 = nn.Linear(100, 10)
+
+        self.upsample1 = nn.ConvTranspose2d(in_channels=10, out_channels=10, kernel_size=7, stride=1)
+        self.upsample2 = nn.ConvTranspose2d(10, 10, kernel_size=3, stride=1)
+        self.upsample3 = nn.ConvTranspose2d(10, 10, kernel_size=3, stride=1)
+        self.upsample4 = nn.ConvTranspose2d(10, 10, kernel_size=7, stride=1)
+        self.upsample5 = nn.ConvTranspose2d(10, 10, kernel_size=7, stride=1)
+        self.upsample6 = nn.ConvTranspose2d(10, 10, kernel_size=2, stride=1)
+        self.lin1 = nn.Linear(10 * 28 * 28, 32)
+        self.lin2 = nn.Linear(32, 10)
+
+    def print_x_shape(self, x):
+        if self.PRINT_ME: print(x.shape)
+
+    def encode(self, x):
+        self.print_x_shape(x)
+        x = self.conv1(x)
+        self.print_x_shape(x)
+        x = self.conv2(x)
+        self.print_x_shape(x)
+        x = self.conv3(x)
+        self.print_x_shape(x)
+        x = self.conv4(x)
+        self.print_x_shape(x)
+        x = self.conv5(x)
+        self.print_x_shape(x)
+        # x = self.maxpool(x)
+        # self.print_x_shape(x)
+        # x = self.maxpool(x)
+        return x
+
+    def decode(self, x):
+        if self.PRINT_ME: print('--in-decoder:-----')
+
+        # self.print_x_shape(x)
+        x = self.upsample1(x)
+        self.print_x_shape(x)
+        x = self.upsample2(x)
+        self.print_x_shape(x)
+        x = self.upsample3(x)
+        self.print_x_shape(x)
+        # x = self.upsample3(x)
+        # self.print_x_shape(x)
+        # x = self.upsample3(x)
+        # self.print_x_shape(x)
+        x = self.upsample4(x)
+        self.print_x_shape(x)
+        x = self.upsample5(x)
+        self.print_x_shape(x)
+        # x = self.upsample6(x)
+        # self.print_x_shape(x)
+        if self.PRINT_ME: print('--upsampling-finished:-----')
+
+        if self.PRINT_ME: print('--flattening:-----')
+
+        if self.PRINT_ME: print('--in-decoder-finished:-----')
+
+        return x
+
+    def forward(self, x):
+        if self.PRINT_ME: print('-----encoder:-----')
+        x = self.encode(x)
+        self.print_x_shape(x)
+        if self.PRINT_ME: print('-----decoder:-----')
+        x = self.decode(x)
+        self.print_x_shape(x)
+
+        if self.PRINT_ME: print('-----decoder-finished:-----')
+        x = self.flatten(x)
+        self.print_x_shape(x)
+        x = self.lin1(x)
+        self.print_x_shape(x)
+        x = self.lin2(x)
+        self.print_x_shape(x)
+        x = self.softmax(x)
+        self.print_x_shape(x)
+
+        self.PRINT_ME = False
+        return x
+
+
+class VAE(nn.Module):
+    def __init__(self, input_dim=28 * 28, h_dim=200, z_dim=20):
+        super().__init__()
+        # encoder
+        self.img_2hid = nn.Linear(input_dim, h_dim)
+        self.hid_2mu = nn.Linear(h_dim, z_dim)
+        self.hid_2sigma = nn.Linear(h_dim, z_dim)
+
+        # decoder
+        self.z_2hid = nn.Linear(z_dim, h_dim)
+        self.hid_2img = nn.Linear(h_dim, input_dim)
+        self.relu = nn.ReLU()
+
+    def encode(self, x):
+        # q_phi(z|x)
+        h = self.relu(self.img_2hid(x))
+        mu, sigma = self.hid_2mu(h), self.hid_2sigma(h)
+        return mu, sigma
+
+    def decode(self, z):
+        # p_theta(x|z)
+        h = self.relu(self.z_2hid(z))
+        return torch.sigmoid(self.hid_2img(h))
+
+    def forward(self, x):
+        mu, sigma = self.encode(x)
+        eps = torch.randn_like(sigma)
+        z_reparametrized = mu + sigma * eps
+        x_reconstructed = self.decode(z_reparametrized)
+        return x_reconstructed, mu, sigma
+
+
+class autoencoder(nn.Module):
+    def __init__(self, input_dim=28 * 28, h_dim=200, z_dim=20):
+        super().__init__()
+        # encoder
+        self.img_2hid = nn.Linear(input_dim, h_dim)
+        # decoder
+        self.z_2hid = nn.Linear(z_dim, h_dim)
+        self.hid_2img = nn.Linear(h_dim, input_dim)
+        self.relu = nn.ReLU()
+        self.flatten = nn.Flatten(start_dim=1)
+
+    def encode(self, x):
+        # q_phi(z|x)
+        x = self.flatten(x)
+        h = self.relu(self.img_2hid(x))
+        # mu, sigma = self.hid_2mu(h),self.hid_2sigma(h)
+        # return mu,sigma
+        return h
+
+    def decode(self, z):
+        # p_theta(x|z)
+        # h = self.relu(self.z_2hid(z))
+        h = self.relu(self.hid_2img(z))
+        return h
+        # return torch.sigmoid(self.hid_2img(h))
+
+    def forward(self, x):
+        # print(f'{x.shape =}')
+        h = self.encode(x)
+        # print(f'{h.shape =}')
+        x_reconstructed = self.decode(h)
+        # print(f'{x_reconstructed.shape =}')
+
+        return x_reconstructed
+class autoencoder_h5_n(nn.Module):
+    def __init__(self, input_dim=28 * 28, h_dim=5):
+        super().__init__()
+        self.img_2hid = nn.Linear(input_dim, h_dim)
+        self.hid_2img = nn.Linear(h_dim, input_dim)
+        self.relu = nn.ReLU()
+        self.flatten = nn.Flatten(start_dim=1)
+
+    def encode(self, x):
+        x = self.flatten(x)
+        return self.relu(self.img_2hid(x))
+
+    def decode(self, z):
+        return self.relu(self.hid_2img(z))
+
+    def forward(self, x):
+        h = self.encode(x)
+        return self.decode(h)
+
+class autoencoder_h5_n_weights_fin_acc89(nn.Module):
+    def __init__(self, input_dim=28 * 28, h_dim=5):
+        super().__init__()
+        self.img_2hid = nn.Linear(input_dim, h_dim)
+        self.hid_2img = nn.Linear(h_dim, input_dim)
+        self.relu = nn.ReLU()
+        self.flatten = nn.Flatten(start_dim=1)
+
+    def encode(self, x):
+        x = self.flatten(x)
+        return self.relu(self.img_2hid(x))
+
+    def decode(self, z):
+        return self.relu(self.hid_2img(z))
+
+    def forward(self, x):
+        h = self.encode(x)
+        return self.decode(h)

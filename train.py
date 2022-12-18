@@ -15,17 +15,19 @@ import real_vae
 
 # Variables
 TEST_ONLY_LAST = False
+TEST_AFTER_EPOCH = 11
 MOMENTUM = 0.9
 # LR_RATE = 2e-2
 
-LR_RATE = 2e-3
-BATCH_SIZE = 64
-EPOCHS = 1
+# LR_RATE = 2e-3
+LR_RATE = 3e-4
+BATCH_SIZE = 32*2**1
+EPOCHS = 30
 pick_device = 'cpu'
 DEVICE = torch.device(pick_device)  # alternative 'mps' - but no speedup...
 
 # model = model.MyModel15().to(DEVICE)
-model = model.vae().to(DEVICE)
+model = model.MyModel5().to(DEVICE)
 # print(model.print_me())
 print(model.__class__.__name__)
 
@@ -64,10 +66,14 @@ trainloader = torch.utils.data.DataLoader(trainset, batch_size=BATCH_SIZE)  # No
 testsetloader = torch.utils.data.DataLoader(testset, batch_size=BATCH_SIZE)
 
 # Loss function and optimizer
+TRAIN_VAE = True
 
-
-criterion = nn.CrossEntropyLoss()
-optimizer = optim.SGD(model.parameters(), lr=LR_RATE, momentum=MOMENTUM)
+if not TRAIN_VAE :
+    criterion = nn.CrossEntropyLoss()
+    optimizer = optim.SGD(model.parameters(), lr=LR_RATE, momentum=MOMENTUM)
+else:
+    criterion = nn.CrossEntropyLoss()
+    optimizer = optim.Adam(model.parameters(), lr=LR_RATE)
 
 
 # optimizer = optim.SGD(model.parameters(), lr=1e-3)
@@ -111,20 +117,12 @@ for epoch in range(EPOCHS):
     if not TEST_ONLY_LAST:
         print(f'{epoch +1 = }')
         accuracy, avg_loss = test(testsetloader, model, criterion)
-        acc_arr.append(float(f'{accuracy:.2f}'))
+        acc_arr.append(float(f'{accuracy:.1f}'))
     else:
-        if epoch + 1 == 5:
+        if (epoch + 1) % TEST_AFTER_EPOCH == 0:
             accuracy, avg_loss = test(testsetloader, model, criterion)
-            mlflow.log_param('accuracy_5', accuracy)
-            mlflow.log_param('avg_loss_5', avg_loss)
-        if epoch + 1 == 10:
-            accuracy, avg_loss = test(testsetloader, model, criterion)
-            mlflow.log_param('accuracy_10', accuracy)
-            mlflow.log_param('avg_loss_10', avg_loss)
-        if epoch + 1 == 15:
-            accuracy, avg_loss = test(testsetloader, model, criterion)
-            mlflow.log_param('accuracy_15', accuracy)
-            mlflow.log_param('avg_loss_15', avg_loss)
+            acc_arr.append(float(f'{accuracy:.1f}'))
+
 if TEST_ONLY_LAST:
     accuracy, avg_loss = test(testsetloader, model, criterion)
 
