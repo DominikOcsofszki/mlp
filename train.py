@@ -17,7 +17,7 @@ MOMENTUM = 0.9
 
 LR_RATE = 2e-3
 BATCH_SIZE = 64
-EPOCHS = 5
+EPOCHS = 1
 pick_device = 'cpu'
 DEVICE = torch.device(pick_device)  # alternative 'mps' - but no speedup...
 
@@ -74,8 +74,14 @@ mlflow.log_param('MOMENTUM', MOMENTUM)
 mlflow.log_param('batch_size', BATCH_SIZE)
 mlflow.log_param('pick_device', pick_device)
 model_entries = [entry for entry in model.modules()]  ##need to ignore other files!?!?<<<<<<<<
+print(f'{model_entries.__len__()}')
+
 # mlflow.log_param('model_entries', model_entries)    #TODO Problem since to long
+mlflow.log_param('model_name_full', model.__class__)
 mlflow.log_param('model_name', model.__class__.__name__)
+# mlflow.log_param('model_entries_0', model_entries[0]) #TODO find way to log model
+# mlflow.log_param('model_entries_1', model_entries[1])
+# mlflow.log_param('model_entries_2', model_entries[2])
 
 
 accuracy, avg_loss = 0, 0
@@ -89,13 +95,13 @@ for epoch in range(EPOCHS):
 
 #TODO normalize???
         X, y = data
-        print(X.shape)
-        print(X.argmax())   ##WHYYY TENSOR 301? Or INDEX 301 in the whole set?
-        max_arg = X.argmax()
-        print(X[max_arg])
-        X = X /255
-        print(X.argmax())
-        print(X[max_arg])
+        # print(X.shape)
+        # print(X.argmax())   ##WHYYY TENSOR 301? Or INDEX 301 in the whole set?
+        # max_arg = X.argmax()
+        # print(X[max_arg])
+        # X = X /255
+        # print(X.argmax())
+        # print(X[max_arg])
 
         X, y = X.to(DEVICE), y.to(DEVICE)
 
