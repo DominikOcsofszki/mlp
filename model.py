@@ -495,6 +495,7 @@ class MyModelVar_Without_Lin_change(nn.Module):
         self.flatten = nn.Flatten()
 
     def forward(self, x):
+        self.print_x_shape(x)
         x = self.conv1(x)
         self.print_x_shape(x)
         x = self.conv2(x)
@@ -512,6 +513,7 @@ class MyModelVar_Without_Lin_change(nn.Module):
         self.print_x_shape(x)
         x = self.softmax(x)
         self.print_x_shape(x)
+        if self.PRINT_ME: print(x[0])
         self.PRINT_ME = False
         return x
 
@@ -522,3 +524,125 @@ class MyModelVar_Without_Lin_change(nn.Module):
         # for x in self.__dict__.items().__module__:
         for x in self.modules():
             print(x)
+
+
+class CNN_6_CONV(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.conv1 = nn.Conv2d(1, 10, kernel_size=7, stride=1)  # 28-6-6-2 = 14
+        self.conv2 = nn.Conv2d(10, 20, kernel_size=7, stride=1)  #
+        self.conv3 = nn.Conv2d(20, 30, kernel_size=3, stride=1)  # 14
+        self.conv4 = nn.Conv2d(30, 20, kernel_size=3, stride=2)  # 14/2 = 7 - 2 = 5
+        self.conv5 = nn.Conv2d(20, 10, kernel_size=3, stride=2, padding=1)
+        self.conv6 = nn.Conv2d(10, 10, kernel_size=3, stride=2)
+
+        self.softmax = nn.Softmax(dim=1)
+        self.flatten = nn.Flatten()
+
+        self.fc1 = nn.Linear(10,100)
+        self.fc2 = nn.Linear(100,10)
+
+    def forward(self, x):
+        x = self.conv1(x)
+        x = self.conv2(x)
+        x = self.conv3(x)
+        x = self.conv4(x)
+        x = self.conv5(x)
+        x = self.conv6(x)
+        x = self.flatten(x)
+        x = self.fc1(x)
+        x = self.fc2(x)
+        x = self.softmax(x)
+        return x
+
+    def forward_mine(self, x):
+        self.print_x_shape(x)
+        x = self.conv1(x)
+        self.print_x_shape(x)
+        x = self.conv2(x)
+        self.print_x_shape(x)
+        x = self.conv3(x)
+        self.print_x_shape(x)
+        x = self.conv4(x)
+        self.print_x_shape(x)
+        x = self.conv5(x)
+        self.print_x_shape(x)
+        x = self.conv6(x)
+        self.print_x_shape(x)
+        # print(x.shape)
+        x = self.flatten(x)
+        self.print_x_shape(x)
+        x = self.softmax(x)
+        self.print_x_shape(x)
+        if self.PRINT_ME: print(x[0])
+        self.PRINT_ME = False
+        return x
+
+    def print_x_shape(self, x):
+        if self.PRINT_ME: print(x.shape)
+
+class vae(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.PRINT_ME = True
+
+
+        self.conv1 = nn.Conv2d(1, 10, kernel_size=7)  # 28-6-6-2 = 14
+        self.conv2 = nn.Conv2d(10, 20, kernel_size=7)  #
+        self.conv3 = nn.Conv2d(20, 30, kernel_size=3)  # 14
+
+        self.conv4 = nn.Conv2d(30, 20, kernel_size=3)  # 14/2 = 7 - 2 = 5
+        self.conv5 = nn.Conv2d(20, 10, kernel_size=7)
+        self.maxpool = nn.MaxPool2d(2,2)
+        # self.conv6 = nn.Conv2d(10, 1, kernel_size=6)
+
+        self.softmax = nn.Softmax(dim=1)
+        self.flatten = nn.Flatten()
+
+        self.fc1 = nn.Linear(10,100)
+        self.fc2 = nn.Linear(100,10)
+
+    def forward__old__(self, x):
+        x = self.conv1(x)
+        x = self.conv2(x)
+        x = self.conv3(x)
+        x = self.conv4(x)
+        x = self.conv5(x)
+        x = self.maxpool(x)
+
+        # x = self.conv6(x)
+        x = self.flatten(x)
+        x = self.fc1(x)
+        x = self.fc2(x)
+        x = self.softmax(x)
+        return x
+
+    def forward(self, x):
+        self.print_x_shape(x)
+        x = self.conv1(x)
+        self.print_x_shape(x)
+        x = self.conv2(x)
+        self.print_x_shape(x)
+        x = self.conv3(x)
+        self.print_x_shape(x)
+        x = self.conv4(x)
+        self.print_x_shape(x)
+        x = self.conv5(x)
+        self.print_x_shape(x)
+        # x = self.conv6(x)
+        x = self.maxpool(x)
+        self.print_x_shape(x)
+        x = self.maxpool(x)
+        self.print_x_shape(x)
+
+        # print(x.shape)
+        x = self.flatten(x)
+        self.print_x_shape(x)
+        x = self.softmax(x)
+        self.print_x_shape(x)
+        if self.PRINT_ME: print(x[0])
+        self.PRINT_ME = False
+        return x
+
+    def print_x_shape(self, x):
+        if self.PRINT_ME: print(x.shape)

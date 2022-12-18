@@ -20,21 +20,21 @@ MOMENTUM = 0.9
 
 LR_RATE = 2e-3
 BATCH_SIZE = 64
-EPOCHS = 3
+EPOCHS = 1
 pick_device = 'cpu'
 DEVICE = torch.device(pick_device)  # alternative 'mps' - but no speedup...
 
 # model = model.MyModel15().to(DEVICE)
-model = model.MyModelVar_Without_Lin_change().to(DEVICE)
+model = model.vae().to(DEVICE)
 # print(model.print_me())
 print(model.__class__.__name__)
 
-#------------------TRACKING------------------------
+# ------------------TRACKING------------------------
 # command for starting:
 # mlflow server --backend-store-uri postgresql://mlflow@localhost/mlflow_db --default-artifact-root file:"/Users/dominikocsofszki/PycharmProjects/mlp/mlruns" -h 0.0.0.0 -p 8000
 
 os.environ['MLFLOW_TRACKING_URI'] = 'http://localhost:8000/'  # TODO Use this for SQL \ Delete for using local
-mlflow.start_run(run_name=model.__class__.__name__)     #ToDo put to the end for using "with" time missing
+mlflow.start_run(run_name=model.__class__.__name__)  # ToDo put to the end for using "with" time missing
 mlflow.log_param('epochs', EPOCHS)
 mlflow.log_param('LR_RATE', LR_RATE)
 mlflow.log_param('MOMENTUM', MOMENTUM)
@@ -49,7 +49,7 @@ mlflow.log_param('model_name', model.__class__.__name__)
 # mlflow.log_param('model_entries_0', model_entries[0]) #TODO find way to log model
 # mlflow.log_param('model_entries_1', model_entries[1])
 # mlflow.log_param('model_entries_2', model_entries[2])
-#------------------TRACKING-----------------------
+# ------------------TRACKING-----------------------
 
 
 # Downloading the dataset
@@ -60,7 +60,7 @@ testset = datasets.MNIST(root='data/testset', transform=transforms.ToTensor(), d
 
 # Trainloader
 # trainloader = torch.utils.data.DataLoader(trainset, batch_size=BATCH_SIZE, shuffle=True)
-trainloader = torch.utils.data.DataLoader(trainset, batch_size=BATCH_SIZE) #No shuffle for reproducibility
+trainloader = torch.utils.data.DataLoader(trainset, batch_size=BATCH_SIZE)  # No shuffle for reproducibility
 testsetloader = torch.utils.data.DataLoader(testset, batch_size=BATCH_SIZE)
 
 # Loss function and optimizer
@@ -92,6 +92,7 @@ def test(dataloader, model_test, loss_fn):
 
 
 accuracy, avg_loss = 0, 0
+acc_arr = []
 
 for epoch in range(EPOCHS):
 
@@ -110,25 +111,33 @@ for epoch in range(EPOCHS):
     if not TEST_ONLY_LAST:
         print(f'{epoch +1 = }')
         accuracy, avg_loss = test(testsetloader, model, criterion)
+        acc_arr.append(float(f'{accuracy:.2f}'))
     else:
-        if epoch + 1 == 5 :
+        if epoch + 1 == 5:
             accuracy, avg_loss = test(testsetloader, model, criterion)
             mlflow.log_param('accuracy_5', accuracy)
             mlflow.log_param('avg_loss_5', avg_loss)
-        if epoch + 1 == 10 :
+        if epoch + 1 == 10:
             accuracy, avg_loss = test(testsetloader, model, criterion)
             mlflow.log_param('accuracy_10', accuracy)
             mlflow.log_param('avg_loss_10', avg_loss)
+        if epoch + 1 == 15:
+            accuracy, avg_loss = test(testsetloader, model, criterion)
+            mlflow.log_param('accuracy_15', accuracy)
+            mlflow.log_param('avg_loss_15', avg_loss)
 if TEST_ONLY_LAST:
     accuracy, avg_loss = test(testsetloader, model, criterion)
 
-
+mlflow.log_param('acc_arr', acc_arr)
 mlflow.log_param('accuracy', accuracy)
 mlflow.log_param('avg_loss', avg_loss)
 
 print('finish!!!')
+
+SAVE_NAME_MODEL = model.__class__.__name__ + '_weights'
 # PATH = '/Users/dominikocsofszki/PycharmProjects/mlp/data/weights/weights_training'
-PATH = '/Users/dominikocsofszki/PycharmProjects/mlp/data/weights/weights_model_classifier_soft'
+# PATH = '/Users/dominikocsofszki/PycharmProjects/mlp/data/weights/weights_model_classifier_soft'
+PATH = '/Users/dominikocsofszki/PycharmProjects/mlp/data/weights/'+SAVE_NAME_MODEL
 
 print(f'save weights at {PATH = }')
 torch.save(model.state_dict(), PATH)
