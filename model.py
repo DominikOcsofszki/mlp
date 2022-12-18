@@ -207,3 +207,318 @@ class MyModel9(nn.Module):
         x = self.fc2(x)
         x = self.softmax(x)
         return x
+
+
+class MyModel10(nn.Module):
+    def __init__(self):
+        super().__init__()
+
+        self.conv1 = nn.Conv2d(1, 10, kernel_size=7, stride=1, padding=3)
+        self.conv2 = nn.Conv2d(10, 20, kernel_size=3, stride=1, padding=1)
+        self.conv3 = nn.Conv2d(20, 10, kernel_size=3, stride=2, padding=1)
+        # self.conv3 = nn.Conv2d(4, 8, kernel_size=3, stride=1, padding=1)
+        # self.conv4 = nn.Conv2d(8, 16, kernel_size=3, stride=1, padding=1)
+        self.relu = nn.ReLU()
+        # self.fc1 = nn.Linear(10 * 28 * 28, 20)
+        self.fc1 = nn.Linear(10 * 14 * 14, 20)
+        self.fc2 = nn.Linear(20, 10)
+        self.softmax = nn.Softmax()
+        self.flatten = nn.Flatten()
+
+    def forward(self, x):
+        x = self.conv1(x)
+        x = self.conv2(x)
+        x = self.conv3(x)
+        # x = self.conv4(x)
+        x = self.flatten(x)
+        x = self.fc1(x)
+        x = self.fc2(x)
+        x = self.softmax(x)
+        return x
+
+
+class MyModel11(nn.Module):
+    def __init__(self):
+        super().__init__()
+
+        self.conv1 = nn.Conv2d(1, 10, kernel_size=7, stride=1)
+        self.conv2 = nn.Conv2d(10, 20, kernel_size=3, stride=1)
+        self.conv3 = nn.Conv2d(20, 30, kernel_size=3, stride=1)
+        # self.conv3 = nn.Conv2d(4, 8, kernel_size=3, stride=1, padding=1)
+        # self.conv4 = nn.Conv2d(8, 16, kernel_size=3, stride=1, padding=1)
+        self.relu = nn.ReLU()
+        # self.fc1 = nn.Linear(10 * 28 * 28, 20)
+        self.fc1 = nn.Linear(30 * 18 * 18, 20)
+        self.fc2 = nn.Linear(20, 10)
+        self.softmax = nn.Softmax()
+        self.flatten = nn.Flatten()
+
+    def forward(self, x):
+        x = self.conv1(x)
+        x = self.conv2(x)
+        x = self.conv3(x)
+        # print(x.shape)
+        # x = self.conv4(x)
+        x = self.flatten(x)
+        x = self.fc1(x)
+        x = self.fc2(x)
+        x = self.softmax(x)
+        return x
+
+
+class MyModel12(nn.Module):
+    def __init__(self):
+        super().__init__()
+
+        self.conv1 = nn.Conv2d(1, 10, kernel_size=7, stride=1)
+        self.conv2 = nn.Conv2d(10, 20, kernel_size=7, stride=1)
+        self.conv3 = nn.Conv2d(20, 30, kernel_size=3, stride=1)
+        # self.conv3 = nn.Conv2d(4, 8, kernel_size=3, stride=1, padding=1)
+        # self.conv4 = nn.Conv2d(8, 16, kernel_size=3, stride=1, padding=1)
+        self.relu = nn.ReLU()
+        # self.fc1 = nn.Linear(10 * 28 * 28, 20)
+        self.fc1 = nn.Linear(30 * 14 * 14, 20)
+        self.fc2 = nn.Linear(20, 10)
+        self.softmax = nn.Softmax()
+        self.flatten = nn.Flatten()
+
+    def forward(self, x):
+        x = self.conv1(x)
+        x = self.conv2(x)
+        x = self.conv3(x)
+        # print(x.shape)
+        # x = self.conv4(x)
+        x = self.flatten(x)
+        x = self.fc1(x)
+        x = self.fc2(x)
+        x = self.softmax(x)
+        return x
+
+
+class MyModel13(nn.Module):
+    def __init__(self):
+        super().__init__()
+
+        self.conv1 = nn.Conv2d(1, 10, kernel_size=7, stride=1)
+        self.conv2 = nn.Conv2d(10, 20, kernel_size=7, stride=1)
+        self.conv3 = nn.Conv2d(20, 30, kernel_size=3, stride=1)
+        # self.conv3 = nn.Conv2d(4, 8, kernel_size=3, stride=1, padding=1)
+        # self.conv4 = nn.Conv2d(8, 16, kernel_size=3, stride=1, padding=1)
+        self.relu = nn.ReLU()
+        # self.fc1 = nn.Linear(10 * 28 * 28, 20)
+        self.fc1 = nn.Linear(30 * 14 * 14, 100)
+        self.fc2 = nn.Linear(100, 10)
+        self.softmax = nn.Softmax()
+        self.flatten = nn.Flatten()
+
+    def forward(self, x):
+        x = self.conv1(x)
+        x = self.conv2(x)
+        x = self.conv3(x)
+        # print(x.shape)
+        # x = self.conv4(x)
+        x = self.flatten(x)
+        x = self.fc1(x)
+        x = self.fc2(x)
+        x = self.softmax(x)
+        return x
+
+
+class MyModel14(nn.Module):
+    def __init__(self):
+        super().__init__()
+
+        self.conv1 = nn.Conv2d(1, 10, kernel_size=7, stride=1)
+        # self.conv2 = nn.Conv2d(10, 20, kernel_size=7, stride=1)
+        self.conv3 = nn.Conv2d(10, 20, kernel_size=3, stride=1)
+        self.relu = nn.ReLU()
+        self.fc1 = nn.Linear(20 * 20 * 20, 10)
+        # self.fc2 = nn.Linear(10, 10)
+        self.softmax = nn.Softmax()
+        self.flatten = nn.Flatten()
+
+    def forward(self, x):
+        x = self.conv1(x)
+        # x = self.conv2(x)
+        x = self.conv3(x)
+        x = self.flatten(x)
+        x = self.fc1(x)
+        # x = self.fc2(x)
+        x = self.softmax(x)
+        return x
+
+
+class MyModel15(nn.Module):
+    def __init__(self):
+        super().__init__()
+
+        self.conv1 = nn.Conv2d(1, 10, kernel_size=7, stride=1)
+        self.conv2 = nn.Conv2d(10, 20, kernel_size=7, stride=1)
+        self.conv3 = nn.Conv2d(20, 30, kernel_size=3, stride=1)
+        self.relu = nn.ReLU()
+        self.fc1 = nn.Linear(30 * 14 * 14, 75)
+        self.fc1_5 = nn.Linear(75, 10)
+        self.fc2 = nn.Linear(10, 10)
+        self.softmax = nn.Softmax()
+        self.flatten = nn.Flatten()
+
+    def forward(self, x):
+        x = self.conv1(x)
+        x = self.conv2(x)
+        x = self.conv3(x)
+        x = self.flatten(x)
+        x = self.fc1(x)
+        x = self.fc1_5(x)
+        x = self.fc2(x)
+        x = self.softmax(x)
+        return x
+
+    def print_me(self):
+        # for x in self.__dict__.items().__module__:
+        for x in self.modules():
+            print(x)
+
+
+class MyModelVar(nn.Module):
+    def __init__(self):
+        super().__init__()
+
+        self.conv1 = nn.Conv2d(1, 10, kernel_size=7, stride=1)
+        self.conv2 = nn.Conv2d(10, 20, kernel_size=7, stride=1)
+        self.conv3 = nn.Conv2d(20, 30, kernel_size=3, stride=1)
+        self.relu = nn.ReLU()
+        self.fc1 = nn.Linear(30 * 14 * 14, 75)
+        self.fc1_5 = nn.Linear(75, 10)
+        self.fc2 = nn.Linear(10, 10)
+        self.softmax = nn.Softmax()
+        self.flatten = nn.Flatten()
+
+    def forward(self, x):
+        x = self.conv1(x)
+        x = self.conv2(x)
+        x = self.conv3(x)
+        x = self.flatten(x)
+        x = self.fc1(x)
+        x = self.fc1_5(x)
+        x = self.fc2(x)
+        x = self.softmax(x)
+        return x
+
+    def print_me(self):
+        # for x in self.__dict__.items().__module__:
+        for x in self.modules():
+            print(x)
+
+
+class MyModelVar_relu(nn.Module):
+    def __init__(self):
+        super().__init__()
+
+        self.conv1 = nn.Conv2d(1, 10, kernel_size=7, stride=1)
+        self.conv2 = nn.Conv2d(10, 20, kernel_size=7, stride=1)
+        self.conv3 = nn.Conv2d(20, 30, kernel_size=3, stride=1)
+        self.relu = nn.ReLU()
+        self.fc1 = nn.Linear(30 * 14 * 14, 75)
+        self.fc1_5 = nn.Linear(75, 10)
+        self.fc2 = nn.Linear(10, 10)
+        self.softmax = nn.Softmax()
+        self.flatten = nn.Flatten()
+
+    def forward(self, x):
+        x = self.conv1(x)
+        x = self.conv2(x)
+        x = self.conv3(x)
+        x = self.flatten(x)
+        x = self.relu(self.fc1(x))
+        x = self.relu(self.fc1_5(x))
+        x = self.relu(self.fc2(x))
+        x = self.softmax(x)
+        return x
+
+    def print_me(self):
+        # for x in self.__dict__.items().__module__:
+        for x in self.modules():
+            print(x)
+
+
+class MyModelVar_Without_Lin(nn.Module):
+    def __init__(self):
+        super().__init__()
+
+        self.conv1 = nn.Conv2d(1, 10, kernel_size=7, stride=1)
+        self.conv2 = nn.Conv2d(10, 20, kernel_size=7, stride=1)
+        self.conv3 = nn.Conv2d(20, 30, kernel_size=3, stride=1)
+        self.conv4 = nn.Conv2d(30, 20, kernel_size=3, stride=1)
+        self.conv5 = nn.Conv2d(20, 10, kernel_size=3, stride=1)
+        self.conv6 = nn.Conv2d(10, 10, kernel_size=3, stride=1)
+        self.conv7 = nn.Conv2d(10, 10, kernel_size=3, stride=1)
+        self.conv8 = nn.Conv2d(10, 10, kernel_size=3, stride=1)
+        self.conv9 = nn.Conv2d(10, 10, kernel_size=3, stride=2)
+
+        self.softmax = nn.Softmax()
+        self.flatten = nn.Flatten()
+
+    def forward(self, x):
+        x = self.conv1(x)
+        x = self.conv2(x)
+        x = self.conv3(x)
+        x = self.conv4(x)
+        x = self.conv5(x)
+        x = self.conv6(x)
+        x = self.conv7(x)
+        x = self.conv8(x)
+        x = self.conv9(x)
+        # print(x.shape)
+        x = self.flatten(x)
+
+        x = self.softmax(x)
+        return x
+
+    def print_me(self):
+        # for x in self.__dict__.items().__module__:
+        for x in self.modules():
+            print(x)
+
+
+class MyModelVar_Without_Lin_change(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.PRINT_ME = True
+        self.conv1 = nn.Conv2d(1, 10, kernel_size=7, stride=1)  # 28-6-6-2 = 14
+        self.conv2 = nn.Conv2d(10, 20, kernel_size=7, stride=1)  #
+        self.conv3 = nn.Conv2d(20, 30, kernel_size=3, stride=1)  # 14
+        self.conv4 = nn.Conv2d(30, 20, kernel_size=3, stride=2)  # 14/2 = 7 - 2 = 5
+        self.conv5 = nn.Conv2d(20, 10, kernel_size=3, stride=2, padding=1)
+        self.conv6 = nn.Conv2d(10, 10, kernel_size=3, stride=2)
+
+        self.softmax = nn.Softmax()
+        self.flatten = nn.Flatten()
+
+    def forward(self, x):
+        x = self.conv1(x)
+        self.print_x_shape(x)
+        x = self.conv2(x)
+        self.print_x_shape(x)
+        x = self.conv3(x)
+        self.print_x_shape(x)
+        x = self.conv4(x)
+        self.print_x_shape(x)
+        x = self.conv5(x)
+        self.print_x_shape(x)
+        x = self.conv6(x)
+        self.print_x_shape(x)
+        # print(x.shape)
+        x = self.flatten(x)
+        self.print_x_shape(x)
+        x = self.softmax(x)
+        self.print_x_shape(x)
+        self.PRINT_ME = False
+        return x
+
+    def print_x_shape(self, x):
+        if self.PRINT_ME: print(x.shape)
+
+    def print_me(self):
+        # for x in self.__dict__.items().__module__:
+        for x in self.modules():
+            print(x)
