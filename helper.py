@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 from torchvision import datasets
 import torch
 from model import MyModel5
+import numpy as np
 
 
 def import_model_name(model_x, activate_eval=True):
@@ -18,7 +19,7 @@ def import_model_name(model_x, activate_eval=True):
     return model_x
 
 
-def show_images_with_model(count_of_images=5, model=None):
+def show_images_with_model(count_of_images=5, model=None, only_return_images_labels=False):
     if model is None:
         PATH_weight_classify = '/Users/dominikocsofszki/PycharmProjects/mlp/data/weights/weights_model_classifier'
         # PATH_weight_classify = '/Users/dominikocsofszki/PycharmProjects/mlp/data/weights/MyModel5_weights'
@@ -27,9 +28,11 @@ def show_images_with_model(count_of_images=5, model=None):
         model_classify.eval()
         model = model_classify
     model.eval()
-    testset = datasets.MNIST(root='data/testset', transform=transforms.ToTensor(), download=True)
+    testset = datasets.MNIST(root='data/testset', transform=transforms.ToTensor(), download=True,train=False)   ###TODO MISSED THE TRAIN!!!
+    print(f"{testset.__len__() = }")
     testsetloader = torch.utils.data.DataLoader(testset, batch_size=count_of_images, shuffle=True)  # TODO shuffle for
     testing_images, labels = next(iter(testsetloader))
+    if only_return_images_labels: return testing_images, labels
     if count_of_images == 1: num_of_tests = 2
     num_of_tests = testing_images.__len__()
     size_fig = 15
@@ -149,11 +152,29 @@ def show_images_with_model_new(count_of_images=5, model=None):
 
     pred_alt = model.forward(testing_images)
     for indx in range(num_of_tests):
-        nump_pred = pred_alt[indx].view(28,28).detach().numpy()
+        nump_pred = pred_alt[indx].view(28, 28).detach().numpy()
         print(nump_pred.shape)
         axs2[indx].imshow(nump_pred)
         axs2[indx].set_title(int(labels[indx]))
     return testing_images, labels
+
+
+def show_scatter_lattent(examples, model_loaded, cmap='Dark2'):
+    # model_loaded = model.VaeMe_200_hidden()
+    mymodel = import_model_name(model_x=model_loaded, activate_eval=True)
+    images, labels = show_images_with_model(examples, model=model_loaded, only_return_images_labels=True)
+    z = mymodel.forward_return_z(images)
+
+    z_detached = z.detach().numpy()
+    labels_detached = labels.detach().numpy()
+    z_detached = np.column_stack((z_detached, labels_detached))
+    print(f'{labels_detached.shape = }')
+    plt.figure(figsize=(10, 10))
+    # plt.scatter(z_detached[:,0],z_detached[:,1],c=labels, cmap='Dark2') #ToDo looks nice!
+    plt.scatter(z_detached[:,0],z_detached[:,1],c=labels, cmap=cmap) #ToDo looks nice!
+    # plt.scatter(z_detached[:, 0], z_detached[:, 1], c=labels)
+    plt.colorbar()
+    plt.show()
 
 
 print('imported Functions:')
@@ -180,4 +201,3 @@ if __name__ == '__main__':
     for item in z:
         print(int(labels[indx]), item)
         indx += 1
-
