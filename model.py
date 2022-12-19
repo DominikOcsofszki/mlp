@@ -967,7 +967,7 @@ class VaeMe_1(nn.Module):
         return criterion, optimizer
 
     def loss_calculated_plus_term(self, loss):
-        return loss + 10000         #ToDo here we have to add the formular from paper
+        return loss + 10000  # ToDo here we have to add the formular from paper
 
     def encode(self, x):
         x = self.flatten(x)
@@ -995,6 +995,7 @@ class VaeMe_1(nn.Module):
         return z
         # x = self.decode(z)
         # return x
+
 
 # torch.randn_like(sigma)::::
 # Returns a tensor with the same size as input that is filled with random numbers from a normal distribution
@@ -1021,7 +1022,7 @@ class VaeMe_200_hidden(nn.Module):
         return criterion, optimizer
 
     def loss_calculated_plus_term(self, loss):
-        return loss         #ToDo here we have to add the formular from paper
+        return loss  # ToDo here we have to add the formular from paper
 
     def encode(self, x):
         x = self.flatten(x)
@@ -1050,7 +1051,268 @@ class VaeMe_200_hidden(nn.Module):
         # x = self.decode(z)
         # return x
 
+
 # torch.randn_like(sigma)::::
 # Returns a tensor with the same size as input that is filled with random numbers from a normal distribution
 # with mean 0 and variance 1. torch.randn_like(input)
 # is equivalent to torch.randn(input.size(), dtype=input.dtype, layout=input.layout, device=input.device).
+
+
+class VaeMe_500_hidden(nn.Module):
+    def __init__(self, hidden_units=500, latent=2):  # From paper hidden_units = 500 /
+        super().__init__()  # no overiffiting of superflouse latent variables,
+        self.flatten = nn.Flatten(start_dim=1)
+        # encode:
+        self.img_to_hiden = nn.Linear(28 * 28, hidden_units)
+        self.hiden_to_mu = nn.Linear(hidden_units, latent)
+        self.hiden_to_sigma = nn.Linear(hidden_units, latent)
+        # decode
+        self.latent_to_hiden = nn.Linear(latent, hidden_units)
+        self.hiden_to_rec_img = nn.Linear(hidden_units, 28 * 28)
+        self.relu = nn.ReLU()
+
+    def return_loss_criterion_optimizer(self, lr_rate):
+        criterion = nn.CrossEntropyLoss()
+        optimizer = optim.Adam(self.parameters(), lr=lr_rate)
+        return criterion, optimizer
+
+    def loss_calculated_plus_term(self, loss):
+        return loss  # ToDo here we have to add the formular from paper
+
+    def encode(self, x):
+        x = self.flatten(x)
+        x = self.relu(self.img_to_hiden(x))
+        mu = self.hiden_to_mu(x)
+        sigma = self.hiden_to_sigma(x)
+        return mu, sigma
+
+    def decode(self, z):
+        z = self.relu(self.latent_to_hiden(z))
+        z = self.relu(self.hiden_to_rec_img(z))
+        return z
+
+    def forward(self, x):
+        mu, sigma = self.encode(x)
+        eps = torch.randn_like(sigma)  # == torch.randn_like(mu) == torch.randn_like(sigma)
+        z = mu + sigma * eps
+        x = self.decode(z)
+        return x
+
+    def forward_return_z(self, x):
+        mu, sigma = self.encode(x)
+        eps = torch.randn_like(sigma)  # == torch.randn_like(mu) == torch.randn_like(sigma)
+        z = mu + sigma * eps
+        return z
+
+
+class VaeMe_500_hidden_c0(nn.Module):
+    def __init__(self, hidden_units=500, latent=2):  # From paper hidden_units = 500 /
+        super().__init__()  # no overiffiting of superflouse latent variables,
+        self.flatten = nn.Flatten(start_dim=1)
+        # encode:
+        self.img_to_hiden = nn.Linear(28 * 28, hidden_units)
+        self.hiden_to_mu = nn.Linear(hidden_units, latent)
+        self.hiden_to_sigma = nn.Linear(hidden_units, latent)
+        # decode
+        self.latent_to_hiden = nn.Linear(latent, hidden_units)
+        self.hiden_to_rec_img = nn.Linear(hidden_units, 28 * 28)
+        self.relu = nn.ReLU()
+
+    def return_loss_criterion_optimizer(self, lr_rate):
+        criterion = nn.CrossEntropyLoss()
+        optimizer = optim.Adam(self.parameters(), lr=lr_rate)
+        return criterion, optimizer
+
+    def loss_calculated_plus_term(self, loss):
+        return loss  # ToDo here we have to add the formular from paper
+
+    def encode(self, x):
+        x = self.flatten(x)
+        x = self.relu(self.img_to_hiden(x))
+        mu = self.hiden_to_mu(x)
+        sigma = self.hiden_to_sigma(x)
+        return mu, sigma
+
+    def decode(self, z):
+        z = self.relu(self.latent_to_hiden(z))
+        z = self.relu(self.hiden_to_rec_img(z))
+        return z
+
+    def forward(self, x):
+        mu, sigma = self.encode(x)
+        eps = torch.randn_like(sigma)  # == torch.randn_like(mu) == torch.randn_like(sigma)
+        z = mu + sigma * eps
+        x = self.decode(z)
+        return x
+
+    def forward_return_z(self, x):
+        mu, sigma = self.encode(x)
+        eps = torch.randn_like(sigma)  # == torch.randn_like(mu) == torch.randn_like(sigma)
+        z = mu + sigma * eps
+        return z
+
+
+class VaeMe_500hidden_5lat(nn.Module):
+    def __init__(self, hidden_units=500, latent=5):  # From paper hidden_units = 500 /
+        super().__init__()  # no overiffiting of superflouse latent variables,
+        self.flatten = nn.Flatten(start_dim=1)
+        # encode:
+        self.img_to_hiden = nn.Linear(28 * 28, hidden_units)
+        self.hiden_to_mu = nn.Linear(hidden_units, latent)
+        self.hiden_to_sigma = nn.Linear(hidden_units, latent)
+        # decode
+        self.latent_to_hiden = nn.Linear(latent, hidden_units)
+        self.hiden_to_rec_img = nn.Linear(hidden_units, 28 * 28)
+        self.relu = nn.ReLU()
+
+    def return_loss_criterion_optimizer(self, lr_rate):
+        criterion = nn.CrossEntropyLoss()
+        optimizer = optim.Adam(self.parameters(), lr=lr_rate)
+        return criterion, optimizer
+
+    def loss_calculated_plus_term(self, loss):
+        return loss  # ToDo here we have to add the formular from paper
+
+    def encode(self, x):
+        x = self.flatten(x)
+        x = self.relu(self.img_to_hiden(x))
+        mu = self.hiden_to_mu(x)
+        sigma = self.hiden_to_sigma(x)
+        return mu, sigma
+
+    def decode(self, z):
+        z = self.relu(self.latent_to_hiden(z))
+        z = self.relu(self.hiden_to_rec_img(z))
+        return z
+
+    def forward(self, x):
+        mu, sigma = self.encode(x)
+        eps = torch.randn_like(sigma)  # == torch.randn_like(mu) == torch.randn_like(sigma)
+        z = mu + sigma * eps
+        x = self.decode(z)
+        return x
+
+    def forward_return_z(self, x):
+        mu, sigma = self.encode(x)
+        eps = torch.randn_like(sigma)  # == torch.randn_like(mu) == torch.randn_like(sigma)
+        z = mu + sigma * eps
+        return z
+
+
+class VaeMe_500hidden_2lat_bce_loss(nn.Module):
+    def __init__(self, hidden_units=500, latent=2):  # From paper hidden_units = 500 /
+        super().__init__()  # no overiffiting of superflouse latent variables,
+        self.flatten = nn.Flatten(start_dim=1)
+        # encode:
+        self.img_to_hiden = nn.Linear(28 * 28, hidden_units)
+        self.hiden_to_mu = nn.Linear(hidden_units, latent)
+        self.hiden_to_sigma = nn.Linear(hidden_units, latent)
+        # decode
+        self.latent_to_hiden = nn.Linear(latent, hidden_units)
+        self.hiden_to_rec_img = nn.Linear(hidden_units, 28 * 28)
+        self.relu = nn.ReLU()
+        self.sigmoid = nn.Sigmoid()
+
+    def return_loss_criterion_optimizer(self, lr_rate):
+        # criterion = nn.CrossEntropyLoss()
+        criterion = nn.BCELoss(reduction='sum')
+        optimizer = optim.Adam(self.parameters(), lr=lr_rate)
+        return criterion, optimizer
+
+    def loss_calculated_plus_term(self, loss, mu=None, sigma=None):
+        if mu is not None :
+            if sigma is not None:
+                kl_div = -torch.sum(
+                    1 + torch.log(sigma.pow(2)) - mu.pow(2) - sigma.pow(2))  # TODO Search in paper #minus for torch?
+                alpha = 0.6
+                beta = 1 - alpha
+
+                loss = alpha * loss + beta * kl_div
+                return loss
+        return loss  # ToDo here we have to add the formular from paper
+
+    def encode(self, x):
+        x = self.flatten(x)
+        x = self.relu(self.img_to_hiden(x))
+        mu = self.hiden_to_mu(x)
+        sigma = self.hiden_to_sigma(x)
+        return mu, sigma
+
+    def decode(self, z):
+        z = self.relu(self.latent_to_hiden(z))
+        z = self.relu(self.hiden_to_rec_img(z))
+        return self.sigmoid(z)
+
+    def forward(self, x):
+        mu, sigma = self.encode(x)
+        eps = torch.randn_like(sigma)  # == torch.randn_like(mu) == torch.randn_like(sigma)
+        z = mu + sigma * eps
+        x = self.decode(z)
+        # return x
+        #
+        return x, mu, sigma
+
+    def forward_return_z(self, x):
+        mu, sigma = self.encode(x)
+        eps = torch.randn_like(sigma)  # == torch.randn_like(mu) == torch.randn_like(sigma)
+        z = mu + sigma * eps
+        return z
+
+class Vae_final(nn.Module):
+    def __init__(self, hidden_units=500, latent=2):  # From paper hidden_units = 500 /
+        super().__init__()  # no overiffiting of superflouse latent variables,
+        self.flatten = nn.Flatten(start_dim=1)
+        # encode:
+        self.img_to_hiden = nn.Linear(28 * 28, hidden_units)
+        self.hiden_to_mu = nn.Linear(hidden_units, latent)
+        self.hiden_to_sigma = nn.Linear(hidden_units, latent)
+        # decode
+        self.latent_to_hiden = nn.Linear(latent, hidden_units)
+        self.hiden_to_rec_img = nn.Linear(hidden_units, 28 * 28)
+        self.relu = nn.ReLU()
+        self.sigmoid = nn.Sigmoid()
+
+    def return_loss_criterion_optimizer(self, lr_rate):
+        # criterion = nn.CrossEntropyLoss()
+        criterion = nn.BCELoss(reduction='sum')
+        optimizer = optim.Adam(self.parameters(), lr=lr_rate)
+        return criterion, optimizer
+
+    def loss_calculated_plus_term(self, loss, mu=None, sigma=None):
+        if mu is not None :
+            if sigma is not None:
+                kl_div = -torch.sum(
+                    1 + torch.log(sigma.pow(2)) - mu.pow(2) - sigma.pow(2))  # TODO Search in paper #minus for torch?
+                alpha = 0.6
+                beta = 1 - alpha
+
+                loss = alpha * loss + beta * kl_div
+                return loss
+        return loss  # ToDo here we have to add the formular from paper
+
+    def encode(self, x):
+        x = self.flatten(x)
+        x = self.relu(self.img_to_hiden(x))
+        mu = self.hiden_to_mu(x)
+        sigma = self.hiden_to_sigma(x)
+        return mu, sigma
+
+    def decode(self, z):
+        z = self.relu(self.latent_to_hiden(z))
+        z = self.relu(self.hiden_to_rec_img(z))
+        return self.sigmoid(z)
+
+    def forward(self, x):
+        mu, sigma = self.encode(x)
+        eps = torch.randn_like(sigma)  # == torch.randn_like(mu) == torch.randn_like(sigma)
+        z = mu + sigma * eps
+        x = self.decode(z)
+        # return x
+        #
+        return x, mu, sigma
+
+    def forward_return_z(self, x):
+        mu, sigma = self.encode(x)
+        eps = torch.randn_like(sigma)  # == torch.randn_like(mu) == torch.randn_like(sigma)
+        z = mu + sigma * eps
+        return z

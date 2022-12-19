@@ -15,28 +15,30 @@ from tqdm import tqdm
 
 # mlflow server --backend-store-uri postgresql://mlflow@localhost/mlflow_db --default-artifact-root file:"/Users/dominikocsofszki/PycharmProjects/mlp/mlruns" -h 0.0.0.0 -p 8000
 # DEBUG PARAMS:
-TEST_ONLY_LAST = True
+TEST_ONLY_LAST = False
 TEST_AFTER_EPOCH = 11
-COUNT_PRINTS = 5
-EPOCHS = 10
+COUNT_PRINTS = 30
+EPOCHS = 100
 
 #
 LR_RATE = 3e-4
-pick_model = model.VaeMe_200_hidden()
+pick_model = model.VaeMe_500hidden_2lat_bce_loss()
 ADD_TEXT = ''
 RUN_SAVE_NAME = pick_model.__class__.__name__ + str(ADD_TEXT)
 print(f'{RUN_SAVE_NAME = }')
 HAS_LOSS_FUNCTION = True  # TODO If model has loss function implemented
 os.environ['MLFLOW_TRACKING_URI'] = 'http://localhost:8000/'  # TODO Use this for SQL \ Delete for using local
+mlflow.set_experiment("testset_correct")
+
 # with mlflow.start_run(run_name=pick_model.__class__.__name__):
 with mlflow.start_run(run_name=RUN_SAVE_NAME):
-    for x in pick_model.parameters() :
-        print (x.shape)
-    print(list(pick_model.parameters()))
-
+    for x in pick_model.parameters():
+        print(x.shape)
+    # print(list(pick_model.parameters()))
 
     MOMENTUM = 0.9
-    BATCH_SIZE = 32 * 2 ** 1
+    # BATCH_SIZE = 32 * 2 ** 1
+    BATCH_SIZE = 8
     pick_device = 'cpu'
     DEVICE = torch.device(pick_device)  # alternative 'mps' - but no speedup...
     model = pick_model.to(DEVICE)
@@ -57,11 +59,11 @@ with mlflow.start_run(run_name=RUN_SAVE_NAME):
 
     # Downloading the dataset
     trainset = datasets.MNIST(root='data/dataset', train=True, transform=transforms.ToTensor(), download=True)
-    testset = datasets.MNIST(root='data/testset', transform=transforms.ToTensor(), download=True) #TODO use train3!!!
-    assert False #TODO do not use testset is missing train=False! For comparing here
-
+    # testset = datasets.MNIST(root='data/testset', train=False, transform=transforms.ToTensor(), download=True)
+    testset = datasets.MNIST(root='data/testset', train=False, transform=transforms.ToTensor(), download=True)
     # Filter for only two classes #TODO Not sure yet if it is needed
-
+    mlflow.log_param('trainset.len', trainset.__len__())
+    mlflow.log_param('test.len', testset.__len__())
     # Trainloader
     trainloader = torch.utils.data.DataLoader(trainset, batch_size=BATCH_SIZE)  # No shuffle for reproducibility
     testsetloader = torch.utils.data.DataLoader(testset, batch_size=BATCH_SIZE)
@@ -87,11 +89,19 @@ with mlflow.start_run(run_name=RUN_SAVE_NAME):
         with torch.no_grad():
             for X, y in dataloader:
                 X, y = X.to(DEVICE), y.to(DEVICE)
-                pred = model_test(X)
-                loss = loss_fn(pred, y).item()
+                pred, mu, sigma = model_test(X)
+                if True:
+                    testX = X.squeeze(dim=1)
+                    testX = model.flatten(testX)
+                    loss = loss_fn(pred, testX).item()
+
+                else:
+                    loss = loss_fn(pred, y).item()
+                    test_loss += loss
+
                 if HAS_LOSS_FUNCTION:
                     loss = model.loss_calculated_plus_term(loss)
-                test_loss += loss
+                    test_loss += loss
                 # test_loss += loss_fn(pred, y).item()
                 correct += (pred.argmax(1) == y).type(torch.float).sum().item()
         test_loss /= num_batches
@@ -113,14 +123,24 @@ with mlflow.start_run(run_name=RUN_SAVE_NAME):
             X, y = X.to(DEVICE), y.to(DEVICE)
 
             optimizer.zero_grad()
-            pred = model(X)
-            loss = criterion(pred, y)
+            pred, mu, sigma = model(X)
+            # print(f'{pred[0] = }')
+            testX = X.squeeze(dim=1)
+            testX = model.flatten(testX)
+            # print(testX.shape)
+            # print(f'{testX[0] = }')
+            loss = criterion(pred, testX)
             COUNT_PRINTS = helper.print_sth_once_ret_new_count(loss, COUNT_PRINTS, add_text='before')
             if HAS_LOSS_FUNCTION:
-                loss = model.loss_calculated_plus_term(loss)
-            COUNT_PRINTS = helper.print_sth_once_ret_new_count(loss, COUNT_PRINTS,add_text='after')
+                loss = model.loss_calculated_plus_term(loss, mu=mu,sigma=sigma)
+            COUNT_PRINTS = helper.print_sth_once_ret_new_count(loss, COUNT_PRINTS, add_text='after')
             loss.backward()
             optimizer.step()
+            # for x in pick_model.parameters():
+            #     print(x.shape)
+            # print(list(pick_model.parameters()))
+        # loop.set_postfix('asda')  # TODO what is it?
+
         if not TEST_ONLY_LAST:
             print(f'{epoch +1 = }')
             accuracy, avg_loss = test(testsetloader, model, criterion)
@@ -138,7 +158,9 @@ with mlflow.start_run(run_name=RUN_SAVE_NAME):
     mlflow.log_param('avg_loss', avg_loss)
 
     print('finish!!!')
-
+    # for x in pick_model.parameters():
+    #     print(x.shape)
+    # print(list(pick_model.parameters()))
     # SAVE_NAME_MODEL = model.__class__.__name__ + '_weights'
     SAVE_NAME_MODEL = RUN_SAVE_NAME + '_weights'
     # PATH = '/Users/dominikocsofszki/PycharmProjects/mlp/data/weights/weights_training'

@@ -59,6 +59,7 @@ trainset = datasets.MNIST(root='data/dataset', train=True, transform=transforms.
 testset = datasets.MNIST(root='data/testset', transform=transforms.ToTensor(), download=True)
 # Filter for only two classes #TODO Not sure yet if it is needed
 # TODO Do we need to normalize the data, or is it already done?
+assert False  # TODO do not use testset is missing train=False!
 
 # Trainloader
 # trainloader = torch.utils.data.DataLoader(trainset, batch_size=BATCH_SIZE, shuffle=True)

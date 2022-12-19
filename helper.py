@@ -28,7 +28,8 @@ def show_images_with_model(count_of_images=5, model=None, only_return_images_lab
         model_classify.eval()
         model = model_classify
     model.eval()
-    testset = datasets.MNIST(root='data/testset', transform=transforms.ToTensor(), download=True,train=False)   ###TODO MISSED THE TRAIN!!!
+    testset = datasets.MNIST(root='data/testset', transform=transforms.ToTensor(), download=True,
+                             train=False)  ###TODO MISSED THE TRAIN!!!
     print(f"{testset.__len__() = }")
     testsetloader = torch.utils.data.DataLoader(testset, batch_size=count_of_images, shuffle=True)  # TODO shuffle for
     testing_images, labels = next(iter(testsetloader))
@@ -114,7 +115,7 @@ def show_images_with_model_new(count_of_images=5, model=None):
         model_classify.eval()
         model = model_classify
     model.eval()
-    testset = datasets.MNIST(root='data/testset', transform=transforms.ToTensor(), download=True)
+    testset = datasets.MNIST(root='data/testset', train=False, transform=transforms.ToTensor(), download=True)
     testsetloader = torch.utils.data.DataLoader(testset, batch_size=count_of_images, shuffle=True)  # TODO shuffle for
     testing_images, labels = next(iter(testsetloader))
     if count_of_images == 1: num_of_tests = 2
@@ -164,25 +165,40 @@ def show_scatter_lattent(examples, model_loaded, cmap='Dark2'):
     mymodel = import_model_name(model_x=model_loaded, activate_eval=True)
     images, labels = show_images_with_model(examples, model=model_loaded, only_return_images_labels=True)
     z = mymodel.forward_return_z(images)
-
+    # print(z[0])
     z_detached = z.detach().numpy()
     labels_detached = labels.detach().numpy()
     z_detached = np.column_stack((z_detached, labels_detached))
-    print(f'{labels_detached.shape = }')
+    # print(f'{labels_detached.shape = }')
     plt.figure(figsize=(10, 10))
-    # plt.scatter(z_detached[:,0],z_detached[:,1],c=labels, cmap='Dark2') #ToDo looks nice!
-    plt.scatter(z_detached[:,0],z_detached[:,1],c=labels, cmap=cmap) #ToDo looks nice!
-    # plt.scatter(z_detached[:, 0], z_detached[:, 1], c=labels)
+    plt.scatter(z_detached[:, 0], z_detached[:, 1], c=labels, cmap=cmap)  # ToDo looks nice!
+    cbar = plt.colorbar()
+    cbar.set_label('labels')
+    plt.show()
+
+def show_scatter_lattent_3D(examples, model_loaded, cmap='Dark2'):
+    # model_loaded = model.VaeMe_200_hidden()
+    mymodel = import_model_name(model_x=model_loaded, activate_eval=True)
+    images, labels = show_images_with_model(examples, model=model_loaded, only_return_images_labels=True)
+    z = mymodel.forward_return_z(images)
+    # print(z[0])
+    z_detached = z.detach().numpy()
+    # labels_detached = labels.detach().numpy()
+    # z_detached = np.column_stack((z_detached, labels_detached))
+    # print(f'{labels_detached.shape = }')
+    plt.figure(figsize=(10, 10))
+    plt.scatter(z_detached[:, 0], z_detached[:, 1],z_detached[:, 2], c=labels, cmap=cmap)  # ToDo looks nice!
     plt.colorbar()
     plt.show()
 
+def print_imported_functions():
+    print('imported Functions:')
+    print('def import_model_name(model_x, activate_eval=True):')
+    print('def show_images_with_model(count_of_images=5, model=None):')
+    print('def print_modul_entries(model):')
+    print('print_sth_once_ret_new_count(sth_to_print, COUNT_PRINTS)')
+    print('counter_for_runs(reset_to_zero=False):')
 
-print('imported Functions:')
-print('def import_model_name(model_x, activate_eval=True):')
-print('def show_images_with_model(count_of_images=5, model=None):')
-print('def print_modul_entries(model):')
-print('print_sth_once_ret_new_count(sth_to_print, COUNT_PRINTS)')
-print('counter_for_runs(reset_to_zero=False):')
 
 if __name__ == '__main__':
     #     print('in helper-main:')
