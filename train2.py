@@ -7,26 +7,36 @@ import torchvision.transforms as transforms
 import torch.optim as optim
 import torch.utils.data
 import torch.nn as nn
+
+import helper
 import model
 import mlflow
 from tqdm import tqdm
 
 # mlflow server --backend-store-uri postgresql://mlflow@localhost/mlflow_db --default-artifact-root file:"/Users/dominikocsofszki/PycharmProjects/mlp/mlruns" -h 0.0.0.0 -p 8000
 # DEBUG PARAMS:
-TEST_ONLY_LAST = False
+TEST_ONLY_LAST = True
 TEST_AFTER_EPOCH = 11
+COUNT_PRINTS = 5
+EPOCHS = 10
+
 #
 LR_RATE = 3e-4
-pick_model = model.VaeMe()
+pick_model = model.VaeMe_200_hidden()
+ADD_TEXT = ''
+RUN_SAVE_NAME = pick_model.__class__.__name__ + str(ADD_TEXT)
+print(f'{RUN_SAVE_NAME = }')
 HAS_LOSS_FUNCTION = True  # TODO If model has loss function implemented
-LOSS_DIFFERENT = True  # TODO If model has different loss function implemented
 os.environ['MLFLOW_TRACKING_URI'] = 'http://localhost:8000/'  # TODO Use this for SQL \ Delete for using local
-with mlflow.start_run(run_name=pick_model.__class__.__name__):  # ToDo put to the end for using "with" time missing
-    # Variables
+# with mlflow.start_run(run_name=pick_model.__class__.__name__):
+with mlflow.start_run(run_name=RUN_SAVE_NAME):
+    for x in pick_model.parameters() :
+        print (x.shape)
+    print(list(pick_model.parameters()))
+
 
     MOMENTUM = 0.9
     BATCH_SIZE = 32 * 2 ** 1
-    EPOCHS = 30
     pick_device = 'cpu'
     DEVICE = torch.device(pick_device)  # alternative 'mps' - but no speedup...
     model = pick_model.to(DEVICE)
@@ -76,7 +86,11 @@ with mlflow.start_run(run_name=pick_model.__class__.__name__):  # ToDo put to th
             for X, y in dataloader:
                 X, y = X.to(DEVICE), y.to(DEVICE)
                 pred = model_test(X)
-                test_loss += loss_fn(pred, y).item()
+                loss = loss_fn(pred, y).item()
+                if HAS_LOSS_FUNCTION:
+                    loss = model.loss_calculated_plus_term(loss)
+                test_loss += loss
+                # test_loss += loss_fn(pred, y).item()
                 correct += (pred.argmax(1) == y).type(torch.float).sum().item()
         test_loss /= num_batches
         correct /= size
@@ -99,8 +113,10 @@ with mlflow.start_run(run_name=pick_model.__class__.__name__):  # ToDo put to th
             optimizer.zero_grad()
             pred = model(X)
             loss = criterion(pred, y)
+            COUNT_PRINTS = helper.print_sth_once_ret_new_count(loss, COUNT_PRINTS, add_text='before')
             if HAS_LOSS_FUNCTION:
                 loss = model.loss_calculated_plus_term(loss)
+            COUNT_PRINTS = helper.print_sth_once_ret_new_count(loss, COUNT_PRINTS,add_text='after')
             loss.backward()
             optimizer.step()
         if not TEST_ONLY_LAST:
@@ -121,10 +137,12 @@ with mlflow.start_run(run_name=pick_model.__class__.__name__):  # ToDo put to th
 
     print('finish!!!')
 
-    SAVE_NAME_MODEL = model.__class__.__name__ + '_weights'
+    # SAVE_NAME_MODEL = model.__class__.__name__ + '_weights'
+    SAVE_NAME_MODEL = RUN_SAVE_NAME + '_weights'
     # PATH = '/Users/dominikocsofszki/PycharmProjects/mlp/data/weights/weights_training'
     # PATH = '/Users/dominikocsofszki/PycharmProjects/mlp/data/weights/weights_model_classifier_soft'
     PATH = '/Users/dominikocsofszki/PycharmProjects/mlp/data/weights/' + SAVE_NAME_MODEL
 
     print(f'save weights at {PATH = }')
+    print(f'{PATH = }')
     torch.save(model.state_dict(), PATH)

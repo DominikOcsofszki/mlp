@@ -18,7 +18,7 @@ class VAE(nn.Module):
     def encode(self,x):
         # q_phi(z|x)
         h = self.relu(self.img_2hid(x))
-        mu, sigma = self.hid_2mu(h),self.hid_2sigma(h)
+        mu, sigma = self.relu(self.hid_2mu(h)),self.relu(self.hid_2sigma(h))
         return mu,sigma
 
 
