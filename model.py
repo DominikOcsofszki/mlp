@@ -848,6 +848,8 @@ class autoencoder(nn.Module):
         # print(f'{x_reconstructed.shape =}')
 
         return x_reconstructed
+
+
 class autoencoder_h5_n(nn.Module):
     def __init__(self, input_dim=28 * 28, h_dim=5):
         super().__init__()
@@ -867,6 +869,7 @@ class autoencoder_h5_n(nn.Module):
         h = self.encode(x)
         return self.decode(h)
 
+
 class autoencoder_h5_n_weights_fin_acc89(nn.Module):
     def __init__(self, input_dim=28 * 28, h_dim=5):
         super().__init__()
@@ -885,3 +888,11 @@ class autoencoder_h5_n_weights_fin_acc89(nn.Module):
     def forward(self, x):
         h = self.encode(x)
         return self.decode(h)
+
+
+class vae_me(nn.Module):
+    def __init__(self, hidden=5):
+        super().__init__()
+        self.img_to_hidden = nn.Linear(28*28, hidden)
+        self.hidden_to_sigma = nn.Linear()
+        self.hidden_to_sigma = nn.Linear()
