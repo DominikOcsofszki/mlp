@@ -13,21 +13,25 @@ import model
 import mlflow
 from tqdm import tqdm
 
-#----------------------
-pick_model = model.Vae_var()
+# ----------------------
+# pick_model = model.Vae_var()
+pick_model = model.Vae_var_28_28()
 
-def show_scatter(lat = 2) :
-    helper.show_scatter_lat_mu_sigma(examples=10000, model_loaded=pick_model, lat=lat,in_train_class=True)
 
-#---------------------=
+def show_scatter(lat=2, current_epoch='missing'):
+    # helper.show_scatter_lat_mu_sigma(examples=10000, model_loaded=pick_model, lat=lat, in_train_class=True)
+    helper.show_scatter_binary(examples=10000, model_loaded=pick_model, lat=lat, in_train_class=True,
+                        current_epoch=current_epoch)
+
+# ---------------------=
 # pg_ctl -D /Users/dominikocsofszki/PycharmProjects/mlp/sql/sql1 -l logfile start
 # mlflow server --backend-store-uri postgresql://mlflow@localhost/mlflow_db --default-artifact-root file:"/Users/dominikocsofszki/PycharmProjects/mlp/mlruns" -h 0.0.0.0 -p 8000
 # DEBUG PARAMS:
 TEST_ONLY_LAST = True
 TEST_AFTER_EPOCH = 11
 COUNT_PRINTS = 5
-EPOCHS = 200
-SHOW_SCATTER_EVERY = 2
+EPOCHS = 30
+SHOW_SCATTER_EVERY = 1
 
 #
 # LR_RATE = 3e-4
@@ -38,14 +42,7 @@ RUN_SAVE_NAME = pick_model.__class__.__name__ + str(ADD_TEXT)
 print(f'{RUN_SAVE_NAME = }')
 HAS_LOSS_FUNCTION = True  # TODO If model has loss function implemented
 os.environ['MLFLOW_TRACKING_URI'] = 'http://localhost:8000/'  # TODO Use this for SQL \ Delete for using local
-# with mlflow.start_run(run_name=pick_model.__class__.__name__):
 with mlflow.start_run(run_name=RUN_SAVE_NAME):
-    print(f'{EPOCHS = }')
-    # for x in pick_model.parameters():
-    #     print(x.shape)
-    # print(list(pick_model.parameters()))
-    # MOMENTUM = 0.9
-    # BATCH_SIZE = 32 * 2 ** 1
     print(f'{BATCH_SIZE = }')
     pick_device = 'cpu'
     DEVICE = torch.device(pick_device)  # alternative 'mps' - but no speedup...
@@ -69,23 +66,44 @@ with mlflow.start_run(run_name=RUN_SAVE_NAME):
     trainset = datasets.MNIST(root='data/dataset', train=True, transform=transforms.ToTensor(), download=True)
     testset = datasets.MNIST(root='data/testset', train=False, transform=transforms.ToTensor(),
                              download=True)  # TODO use train3!!!
-    # assert False #TODO do not use testset is missing train=False! For comparing here
 
-    # Filter for only two classes #TODO Not sure yet if it is needed
+    class_4_train = (trainset.targets == 4)
+    class_9_train = (trainset.targets == 9)
+    indices_train = (class_4_train | class_9_train).nonzero().reshape(-1)
+    class_4_test = (testset.targets == 4)
+    class_9_test = (testset.targets == 9)
+    indices_test = (class_4_test | class_9_test).nonzero().reshape(-1)
+    filtered_trainset = torch.utils.data.Subset(dataset=trainset, indices=indices_train)
+    filtered_testset = torch.utils.data.Subset(dataset=testset, indices=indices_test)
 
+    # --------------------------
+
+    trainset = filtered_trainset
+    testset = filtered_testset
     # Trainloader
     trainloader = torch.utils.data.DataLoader(trainset, batch_size=BATCH_SIZE)  # No shuffle for reproducibility
     testsetloader = torch.utils.data.DataLoader(testset, batch_size=BATCH_SIZE)
-
 
     loss_arr = []
     test_img_after_epochs = []
     optimizer = torch.optim.Adam(model.parameters(), lr=LR_RATE)
     loss_fn = nn.BCELoss(reduction='sum')
+    PRINT_ONCE = True
     for epoch in range(EPOCHS):
 
         loop = tqdm(enumerate(trainloader))
         for i, (x, _) in loop:
+
+            if PRINT_ONCE:
+                # print(x.min())
+                print(f'{x[0].min() = }')
+                print(f'{x.mean() = }')
+                print(f'{x[0].mean() = }')
+                # print(f'{x[0] = }')
+                # print(x[0])
+                # print(x[0].mean())
+
+                PRINT_ONCE = False
             # forward pass
             x = x.to(DEVICE).view(x.shape[0], 28 * 28)  # TODO why?
             x_reconstruction, mu, sigma = model(x)
@@ -101,11 +119,11 @@ with mlflow.start_run(run_name=RUN_SAVE_NAME):
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
-            loop.set_postfix(loss=loss.item(), loss_avg=loss.item()/BATCH_SIZE)
+            loop.set_postfix(loss=loss.item(), loss_avg=loss.item() / BATCH_SIZE)
             loss_arr.append(loss.item())
             # loop.set_postfix(loss_avg=loss.item()/BATCH_SIZE)
-        if epoch %  SHOW_SCATTER_EVERY== 0:
-            show_scatter()
+        if epoch % SHOW_SCATTER_EVERY == 0:
+            show_scatter(current_epoch=str(epoch))
     # mlflow.log_param('acc_arr', acc_arr)
     # mlflow.log_param('accuracy', accuracy)
     # mlflow.log_param('avg_loss', avg_loss)

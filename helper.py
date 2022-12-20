@@ -1,3 +1,5 @@
+import numpy
+
 import model
 from torchvision.transforms import transforms
 from torch.utils.data import Dataset
@@ -8,7 +10,42 @@ from model import MyModel5
 import numpy as np
 import torch.nn as nn
 
-def import_model_name(model_x:nn.Module, activate_eval=True):
+
+# (class_nr_0 = False,class_nr_1 = False,class_nr_2 = False,class_nr_3 = False,
+#                class_nr_4 = False,class_nr_5 = False,class_nr_6 = False,class_nr_7 = False,
+#                class_nr_8 = False,class_nr_9 = False, all_classes=False)
+
+class MyDataSets:
+    def __init__(self, all_classes=False, tuble=(4, 9)):
+        trainset = datasets.MNIST(root='data/dataset', train=True, transform=transforms.ToTensor())
+        testset = datasets.MNIST(root='data/testset', train=False, transform=transforms.ToTensor())
+        if all_classes:
+            self.trainset = trainset
+            self.testset = testset
+            self.trainset_size = trainset.__len__()
+            self.testset_size = testset.__len__()
+        else:
+            indices_train = []
+            indices_test = []
+            for class_nr in tuble:
+                indices_train.append((trainset.targets == class_nr).nonzero())
+                indices_test.append((testset.targets == class_nr).nonzero())
+            indices_train = torch.vstack(indices_train).reshape(-1)
+            indices_test = torch.vstack(indices_test).reshape(-1)
+            filtered_trainset = torch.utils.data.Subset(dataset=trainset, indices=indices_train)
+            filtered_testset = torch.utils.data.Subset(dataset=testset, indices=indices_test)
+
+            self.trainset = filtered_trainset
+            self.testset = filtered_testset
+
+            self.trainset_size = indices_train.shape
+            self.testset_size = indices_test.shape
+        print(f'{self.trainset_size = }')
+        print(f'{self.testset_size = }')
+
+
+
+def import_model_name(model_x: nn.Module, activate_eval=True):
     model_name = model_x._get_name()
     print(f'{model_name = }')
     save_name_model = model_name + '_weights'
@@ -17,6 +54,27 @@ def import_model_name(model_x:nn.Module, activate_eval=True):
     if activate_eval: model_x.eval()
     print(f'{save_name_model} imported')
     return model_x
+
+
+def return_images_labels(count_of_images=5, training_set=False):
+    testset = datasets.MNIST(root='data/testset', transform=transforms.ToTensor(), download=True,
+                             train=training_set)
+    class_4_test = (testset.targets == 4)
+    class_9_test = (testset.targets == 9)
+
+    indices_test = (class_4_test | class_9_test).nonzero().reshape(-1)
+
+    # filtered_trainset = torch.utils.data.Subset(dataset=trainset, indices=indices_train)
+    filtered_testset = torch.utils.data.Subset(dataset=testset, indices=indices_test)
+
+    # --------------------------
+
+    # trainset = filtered_trainset
+    testset = filtered_testset
+
+    testsetloader = torch.utils.data.DataLoader(testset, batch_size=count_of_images, shuffle=True)  # TODO shuffle for
+    testing_images, labels = next(iter(testsetloader))
+    return testing_images, labels
 
 
 def show_images_with_model(count_of_images=5, model=None, only_return_images_labels=False, training_set=False):
@@ -211,29 +269,75 @@ def show_scatter_lat(examples, model_loaded, lat: int = 2, cmap='Dark2', train=F
     plt.show()
 
 
-def show_scatter_lat_mu_sigma(examples, model_loaded, lat: int = 2, cmap='Dark2', in_train_class=False, use_training_set=False):
+def show_scatter_lat_mu_sigma(examples, model_loaded, lat: int = 2, cmap='Dark2', in_train_class=False,
+                              use_training_set=False):
     if not in_train_class: model_loaded = import_model_name(model_x=model_loaded, activate_eval=True)
     images, labels = show_images_with_model(examples, model=model_loaded, only_return_images_labels=True,
                                             training_set=use_training_set)
     mu, sigma = model_loaded.encode(images)
     # z = model_loaded.calc_z(mu, sigma)
-    print(mu,sigma)
+    # print(mu,sigma)
     z = mu + sigma
-    print(f'{mu[0]=}')
-    print(f'{sigma[0]=}')
+    # print(f'{mu[0]=}')
+    # print(f'{sigma[0]=}')
 
-    print(f'{z[0]=}')
+    # print(f'{z[0]=}')
     z_det = z.detach().numpy()
-
+    print(f'{z.mean() = }')
     plt.figure(figsize=(10, 10))
     if lat == 2:
         plt.scatter(z_det[:, 0], z_det[:, 1], c=labels, cmap=cmap, alpha=0.9)  # ToDo looks nice!
     if lat == 3:
-        plt.scatter(z_det[:, 0], z_det[:, 1],z_det[:, 2], c=labels, cmap=cmap, alpha=0.5)  # ToDo looks nice!
+        plt.scatter(z_det[:, 0], z_det[:, 1], z_det[:, 2], c=labels, cmap=cmap, alpha=0.5)  # ToDo looks nice!
     plt.colorbar()
     plt.show()
 
 
+def show_scatter(examples, model_loaded, lat: int = 2, cmap='Dark2', in_train_class=False, use_training_set=False,
+                 current_epoch='epoch_information'):
+    if not in_train_class: model_loaded = import_model_name(model_x=model_loaded, activate_eval=True)
+    images, labels = show_images_with_model(examples, model=model_loaded, only_return_images_labels=True,
+                                            training_set=use_training_set)
+    mu, sigma = model_loaded.encode(images)
+    # z = mu + sigma
+    z = mu
+    z_det = z.detach().numpy()
+    plt.figure(figsize=(10, 10))
+    plt.scatter(z_det[:, 0], z_det[:, 1], c=labels, cmap=cmap, alpha=0.9)  # ToDo looks nice!
+    plt.colorbar()
+    plt.title(f'{current_epoch = }')
+    plt.show()
+
+
+def show_scatter_binary_train(model_loaded, mydataset:MyDataSets, current_epoch='epoch_information'):
+    size = mydataset.testset
+    testsetloader = torch.utils.data.DataLoader(mydataset.testset_size, batch_size=size)  # TODO shuffle for
+    testing_images, labels = next(iter(testsetloader))
+
+    # images, labels = return_images_labels(examples, training_set=use_training_set)
+    mu, sigma = model_loaded.encode(images)
+    z = mu
+    z_det = z.detach().numpy()
+    plt.figure(figsize=(10, 10))
+    plt.scatter(z_det[:, 0], z_det[:, 1], c=labels, cmap='', alpha=0.9)  # ToDo looks nice!
+    plt.colorbar()
+    plt.title(f'{current_epoch = }')
+    plt.show()
+
+def show_scatter_binary_dataset(model:nn.Module, mydataset:MyDataSets, current_epoch='epoch_information'):
+    model.eval()
+    testing_images, labels = next(iter(mydataset.testset))
+    print(testing_images)
+    mu, sigma = model.encode(testing_images)
+    print(f'{mu = }')
+    z = mu
+    z_det = z.detach().numpy()
+    model.train()
+    plt.figure(figsize=(10, 10))
+    plt.scatter(z_det[:, 0], z_det[:, 1], c=labels, cmap='Accent', alpha=0.9)  # ToDo looks nice!
+    plt.colorbar()
+    plt.title(f'{current_epoch = }')
+    plt.show()
 def latent_to_plt_img(modelpick, rand_lat_size=2):
     # rand_lat = torch.rand(2)
     rand_lat = torch.rand(rand_lat_size)
@@ -247,16 +351,12 @@ def latent_to_plt_img(modelpick, rand_lat_size=2):
 
     znew = z_reshaped.detach()
     plt.imshow(znew)
+
+
 def latent_rand_to_img(modelpick, tensor_rand):
     rand_lat = tensor_rand
     z = modelpick.decode(rand_lat)
-    print(rand_lat.shape)
-    print(f'{rand_lat = }')
-
     z_reshaped = z.view(28, 28)
-    print(z.shape)
-    print(z_reshaped.shape)
-
     znew = z_reshaped.detach()
     plt.imshow(znew)
 

@@ -13,29 +13,32 @@ import model
 import mlflow
 from tqdm import tqdm
 
-#----------------------
-pick_model = model.Vae_var()
-
-def show_scatter(lat = 2) :
-    helper.show_scatter_lat_mu_sigma(examples=10000, model_loaded=pick_model, lat=lat,in_train_class=True)
-    # helper.show_scatter_lat(examples=10000, model_loaded=model, lat=lat,train=True)
-    # helper.show_scatter_lat(examples=60000, model_loaded=model, lat=lat,train=True,use_training_set=True)
-    # helper.show_scatter_lat(examples=10000, model_loaded=model, lat=3,train=True)
+# ----------------------
+# pick_model = model.Vae_var()
+pick_model = model.Vae_var_28_28()
 
 
-#---------------------=
+def show_scatter(lat=2, current_epoch='missing'):
+    # helper.show_scatter_lat_mu_sigma(examples=10000, model_loaded=pick_model, lat=lat, in_train_class=True)
+    # helper.show_scatter(examples=10000, model_loaded=pick_model, lat=lat, in_train_class=True,
+    #                     current_epoch=current_epoch)
+
+    helper.show_scatter_binary(examples=10000, model_loaded=pick_model, lat=lat, in_train_class=True,
+                            current_epoch=current_epoch)
+
+# ---------------------=
 # pg_ctl -D /Users/dominikocsofszki/PycharmProjects/mlp/sql/sql1 -l logfile start
 # mlflow server --backend-store-uri postgresql://mlflow@localhost/mlflow_db --default-artifact-root file:"/Users/dominikocsofszki/PycharmProjects/mlp/mlruns" -h 0.0.0.0 -p 8000
 # DEBUG PARAMS:
 TEST_ONLY_LAST = True
 TEST_AFTER_EPOCH = 11
 COUNT_PRINTS = 5
-EPOCHS = 10
-SHOW_SCATTER_EVERY = 2
+EPOCHS = 100
+SHOW_SCATTER_EVERY = 1
 
 #
 # LR_RATE = 3e-4
-BATCH_SIZE = 16 * 2 ** 1
+BATCH_SIZE = 16 * 2 ** 3
 LR_RATE = 3e-4
 ADD_TEXT = ''
 RUN_SAVE_NAME = pick_model.__class__.__name__ + str(ADD_TEXT)
@@ -46,7 +49,7 @@ os.environ['MLFLOW_TRACKING_URI'] = 'http://localhost:8000/'  # TODO Use this fo
 with mlflow.start_run(run_name=RUN_SAVE_NAME):
     # for x in pick_model.parameters():ni
     #     print(x.shape)
-    print(list(pick_model.parameters()))
+    # print(list(pick_model.parameters()))
     # MOMENTUM = 0.9
     # BATCH_SIZE = 32 * 2 ** 1
     print(f'{BATCH_SIZE = }')
@@ -80,15 +83,26 @@ with mlflow.start_run(run_name=RUN_SAVE_NAME):
     trainloader = torch.utils.data.DataLoader(trainset, batch_size=BATCH_SIZE)  # No shuffle for reproducibility
     testsetloader = torch.utils.data.DataLoader(testset, batch_size=BATCH_SIZE)
 
-
     loss_arr = []
     test_img_after_epochs = []
     optimizer = torch.optim.Adam(model.parameters(), lr=LR_RATE)
     loss_fn = nn.BCELoss(reduction='sum')
+    PRINT_ONCE = True
     for epoch in range(EPOCHS):
 
         loop = tqdm(enumerate(trainloader))
         for i, (x, _) in loop:
+
+            if PRINT_ONCE:
+                # print(x.min())
+                print(f'{x[0].min() = }')
+                print(f'{x.mean() = }')
+                print(f'{x[0].mean() = }')
+                # print(f'{x[0] = }')
+                # print(x[0])
+                # print(x[0].mean())
+
+                PRINT_ONCE = False
             # forward pass
             x = x.to(DEVICE).view(x.shape[0], 28 * 28)  # TODO why?
             x_reconstruction, mu, sigma = model(x)
@@ -104,11 +118,11 @@ with mlflow.start_run(run_name=RUN_SAVE_NAME):
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
-            loop.set_postfix(loss=loss.item(), loss_avg=loss.item()/BATCH_SIZE)
+            loop.set_postfix(loss=loss.item(), loss_avg=loss.item() / BATCH_SIZE)
             loss_arr.append(loss.item())
             # loop.set_postfix(loss_avg=loss.item()/BATCH_SIZE)
-        if epoch %  SHOW_SCATTER_EVERY== 0:
-            show_scatter()
+        if epoch % SHOW_SCATTER_EVERY == 0:
+            show_scatter(current_epoch=str(epoch))
     # mlflow.log_param('acc_arr', acc_arr)
     # mlflow.log_param('accuracy', accuracy)
     # mlflow.log_param('avg_loss', avg_loss)

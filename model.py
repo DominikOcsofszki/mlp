@@ -1566,7 +1566,7 @@ class Vae_h200_l2(nn.Module):
         return z
 
 class Vae_var(nn.Module):
-    def __init__(self, hidden_units=700, latent=2):  # From paper hidden_units = 500 /
+    def __init__(self, hidden_units=1500, latent=2):  # From paper hidden_units = 500 /
         super().__init__()  # no overiffiting of superflouse latent variables,
         self.flatten = nn.Flatten(start_dim=1)
         # encode:
@@ -1613,3 +1613,144 @@ class Vae_var(nn.Module):
         z = mu + sigma * eps
         # x = self.decode(z)
         return z
+
+class Vae_var_add_layer_out_put_to_high_to_normalize(nn.Module):
+    def __init__(self, hidden_units=500, latent=2,hidden2 = 200):  # From paper hidden_units = 500 /
+        super().__init__()  # no overiffiting of superflouse latent variables,
+        self.flatten = nn.Flatten(start_dim=1)
+        # encode:
+        self.img_to_hiden = nn.Linear(28 * 28, hidden_units)
+        self.hidden_to_hidden2 = nn.Linear(hidden_units, hidden2)
+        self.hidden2_to_mu = nn.Linear(hidden2, latent)
+        # self.hiden_to_mu = nn.Linear(hidden_units, latent)
+        self.hidden2_to_sigma = nn.Linear(hidden2, latent)
+        # decode
+        self.latent_to_hidden = nn.Linear(latent, hidden_units)
+        self.hidden_to_hidden2 = nn.Linear(hidden_units,hidden2)
+
+        self.hidden2_to_rec_img = nn.Linear(hidden2, 28 * 28)
+        self.relu = nn.ReLU()
+        self.sigma = nn.Sigmoid()
+
+    # def return_loss_criterion_optimizer(self, lr_rate):
+    #     criterion = nn.CrossEntropyLoss()
+    #     optimizer = optim.Adam(self.parameters(), lr=lr_rate)
+    #     return criterion, optimizer
+
+    def encode(self, x):
+        x = self.flatten(x)
+        x = self.relu(self.img_to_hiden(x))
+        x = self.relu(self.hidden_to_hidden2(x))
+        mu = self.hidden2_to_mu(x)
+        sigma = self.hidden2_to_sigma(x)
+        return mu, sigma
+
+    def decode(self, z):
+        z = self.relu(self.latent_to_hidden(z))
+        z = self.relu(self.hidden_to_hidden2(z))
+        z = self.sigma(self.hidden2_to_rec_img(z))
+
+        return z
+
+    def forward(self, x):
+        mu, sigma = self.encode(x)
+        eps = torch.randn_like(sigma)  # == torch.randn_like(mu) == torch.randn_like(sigma)
+        z = mu + sigma * eps
+        x = self.decode(z)
+        return x,mu,sigma
+    def calc_z(self, mu, sigma):
+        # mu, sigma = self.encode(x)
+        eps = torch.randn_like(sigma)  # == torch.randn_like(mu) == torch.randn_like(sigma)
+        z = mu + sigma * eps
+        # x = self.decode(z)
+        return z
+
+class Vae_var_fix_norm(nn.Module):
+    def __init__(self, hidden_units=250, latent=2,hidden2 = 250):  # From paper hidden_units = 500 /
+        super().__init__()  # no overiffiting of superflouse latent variables,
+        self.flatten = nn.Flatten(start_dim=1)
+        # encode:
+        self.img_to_hiden = nn.Linear(28 * 28, hidden_units)
+        self.hidden_to_hidden2 = nn.Linear(hidden_units, hidden2)
+        self.hidden2_to_mu = nn.Linear(hidden2, latent)
+        self.hidden2_to_sigma = nn.Linear(hidden2, latent)
+        # decode
+        self.latent_to_hidden = nn.Linear(latent, hidden_units)
+        self.hidden_to_hidden2 = nn.Linear(hidden_units,hidden2)
+
+        self.hidden2_to_rec_img = nn.Linear(hidden2, 28 * 28)
+        self.relu = nn.ReLU()
+        self.sigmoid = nn.Sigmoid()
+
+    def encode(self, x):
+        x = self.flatten(x)
+        x = self.relu(self.img_to_hiden(x))
+        x = self.relu(self.hidden_to_hidden2(x))
+        # mu = self.hidden2_to_mu(x)
+        mu = self.sigmoid(self.hidden2_to_mu(x))
+        # sigma = self.hidden2_to_sigma(x)
+        sigma = self.sigmoid(self.hidden2_to_sigma(x))
+        return mu, sigma
+
+    def decode(self, z):
+        z = self.relu(self.latent_to_hidden(z))
+        z = self.relu(self.hidden_to_hidden2(z))
+        z = self.sigmoid(self.hidden2_to_rec_img(z))
+
+        return z
+
+    def forward(self, x):
+        mu, sigma = self.encode(x)
+        eps = torch.randn_like(sigma)  # == torch.randn_like(mu) == torch.randn_like(sigma)
+        z = mu + sigma * eps
+        z = self.sigmoid(z)
+        x = self.decode(z)
+        return x,mu,sigma
+    # def calc_z(self, mu, sigma):
+    #     # mu, sigma = self.encode(x)
+    #     eps = torch.randn_like(sigma)  # == torch.randn_like(mu) == torch.randn_like(sigma)
+    #     z = mu + sigma * eps
+    #     # x = self.decode(z)
+    #     return z
+
+class Vae_var_28_28(nn.Module):
+    def __init__(self, hidden_units=500, latent=2,hidden2 = 500):  # From paper hidden_units = 500 /
+        super().__init__()  # no overiffiting of superflouse latent variables,
+        self.flatten = nn.Flatten(start_dim=1)
+        # encode:
+        self.img_to_hiden = nn.Linear(28 * 28, hidden_units)
+        self.hidden_to_hidden2 = nn.Linear(hidden_units, hidden2)
+        self.hidden2_to_mu = nn.Linear(hidden2, latent)
+        self.hidden2_to_sigma = nn.Linear(hidden2, latent)
+        # decode
+        self.latent_to_hidden = nn.Linear(latent, hidden_units)
+        self.hidden_to_hidden2 = nn.Linear(hidden_units,hidden2)
+
+        self.hidden2_to_rec_img = nn.Linear(hidden2, 28 * 28)
+        self.relu = nn.ReLU()
+        self.sigmoid = nn.Sigmoid()
+
+    def encode(self, x):
+        x = self.flatten(x)
+        x = self.relu(self.img_to_hiden(x))
+        x = self.relu(self.hidden_to_hidden2(x))
+        # mu = self.hidden2_to_mu(x)
+        mu = self.sigmoid(self.hidden2_to_mu(x))
+        # sigma = self.hidden2_to_sigma(x)
+        sigma = self.sigmoid(self.hidden2_to_sigma(x))
+        return mu, sigma
+
+    def decode(self, z):
+        z = self.relu(self.latent_to_hidden(z))
+        z = self.relu(self.hidden_to_hidden2(z))
+        z = self.sigmoid(self.hidden2_to_rec_img(z))
+
+        return z
+
+    def forward(self, x):
+        mu, sigma = self.encode(x)
+        eps = torch.randn_like(sigma)  # == torch.randn_like(mu) == torch.randn_like(sigma)
+        z = mu + sigma * eps
+        z = self.sigmoid(z)
+        x = self.decode(z)
+        return x,mu,sigma
