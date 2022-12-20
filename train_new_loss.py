@@ -14,25 +14,29 @@ import mlflow
 from tqdm import tqdm
 
 #----------------------
+pick_model = model.Vae_var()
+
 def show_scatter(lat = 2) :
-    helper.show_scatter_lat(examples=10000, model_loaded=model, lat=lat,train=True)
-    helper.show_scatter_lat(examples=60000, model_loaded=model, lat=lat,train=True,use_training_set=True)
+    helper.show_scatter_lat_mu_sigma(examples=10000, model_loaded=pick_model, lat=lat,in_train_class=True)
+    # helper.show_scatter_lat(examples=10000, model_loaded=model, lat=lat,train=True)
+    # helper.show_scatter_lat(examples=60000, model_loaded=model, lat=lat,train=True,use_training_set=True)
     # helper.show_scatter_lat(examples=10000, model_loaded=model, lat=3,train=True)
 
 
 #---------------------=
-# mlflow server --backend-store-uri postgresql://mlflow@localhost/mlflow_db --default-artifact-root file:"/Users/dominikocsofszki/PycharmProjects/mlp/mlruns" -h 0.0.0.0 -p 8000
+# !pg_ctl -D /Users/dominikocsofszki/PycharmProjects/mlp/sql/sql1 -l logfile start
+# !mlflow server --backend-store-uri postgresql://mlflow@localhost/mlflow_db --default-artifact-root file:"/Users/dominikocsofszki/PycharmProjects/mlp/mlruns" -h 0.0.0.0 -p 8000
 # DEBUG PARAMS:
 TEST_ONLY_LAST = True
 TEST_AFTER_EPOCH = 11
 COUNT_PRINTS = 5
-EPOCHS = 10
+EPOCHS = 100
 SHOW_SCATTER_EVERY = 1
 
 #
 # LR_RATE = 3e-4
-LR_RATE = 3e-3
-pick_model = model.Vae_h500_l2()
+BATCH_SIZE = 16 * 2 ** 1
+LR_RATE = 3e-4
 ADD_TEXT = ''
 RUN_SAVE_NAME = pick_model.__class__.__name__ + str(ADD_TEXT)
 print(f'{RUN_SAVE_NAME = }')
@@ -40,13 +44,12 @@ HAS_LOSS_FUNCTION = True  # TODO If model has loss function implemented
 os.environ['MLFLOW_TRACKING_URI'] = 'http://localhost:8000/'  # TODO Use this for SQL \ Delete for using local
 # with mlflow.start_run(run_name=pick_model.__class__.__name__):
 with mlflow.start_run(run_name=RUN_SAVE_NAME):
-    for x in pick_model.parameters():
-        print(x.shape)
-    # print(list(pick_model.parameters()))
+    # for x in pick_model.parameters():ni
+    #     print(x.shape)
+    print(list(pick_model.parameters()))
     # MOMENTUM = 0.9
     # BATCH_SIZE = 32 * 2 ** 1
-    BATCH_SIZE = 256
-
+    print(f'{BATCH_SIZE = }')
     pick_device = 'cpu'
     DEVICE = torch.device(pick_device)  # alternative 'mps' - but no speedup...
     model = pick_model.to(DEVICE)
@@ -86,25 +89,25 @@ with mlflow.start_run(run_name=RUN_SAVE_NAME):
     # optimizer = optim.SGD(model.parameters(), lr=1e-3)
 
     # Test function
-    def test(dataloader, model_test, loss_fn):
-        size = len(dataloader.dataset)
-        num_batches = len(dataloader)
-        model_test.eval()
-        test_loss, correct = 0, 0
-        with torch.no_grad():
-            for X, y in dataloader:
-                X, y = X.to(DEVICE), y.to(DEVICE)
-                pred = model_test(X)
-                loss = loss_fn(pred, y).item()
-                if HAS_LOSS_FUNCTION:
-                    loss = model.loss_calculated_plus_term(loss)
-                test_loss += loss
-                # test_loss += loss_fn(pred, y).item()
-                correct += (pred.argmax(1) == y).type(torch.float).sum().item()
-        test_loss /= num_batches
-        correct /= size
-        print(f'Test Error:  Accuracy: {(100 * correct):>0.1f}%, Avg loss: {test_loss:>8f}\n')
-        return (100 * correct), test_loss
+    # def test(dataloader, model_test, loss_fn):
+    #     size = len(dataloader.dataset)
+    #     num_batches = len(dataloader)
+    #     model_test.eval()
+    #     test_loss, correct = 0, 0
+    #     with torch.no_grad():
+    #         for X, y in dataloader:
+    #             X, y = X.to(DEVICE), y.to(DEVICE)
+    #             pred = model_test(X)
+    #             loss = loss_fn(pred, y).item()
+    #             if HAS_LOSS_FUNCTION:
+    #                 loss = model.loss_calculated_plus_term(loss)
+    #             test_loss += loss
+    #             # test_loss += loss_fn(pred, y).item()
+    #             correct += (pred.argmax(1) == y).type(torch.float).sum().item()
+    #     test_loss /= num_batches
+    #     correct /= size
+    #     print(f'Test Error:  Accuracy: {(100 * correct):>0.1f}%, Avg loss: {test_loss:>8f}\n')
+    #     return (100 * correct), test_loss
 
 
     accuracy, avg_loss = 0, 0
@@ -138,7 +141,8 @@ with mlflow.start_run(run_name=RUN_SAVE_NAME):
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
-            loop.set_postfix(loss=loss.item())  # TODO what is it?
+            loop.set_postfix(loss=loss.item(), loss_avg=loss.item()/BATCH_SIZE)
+            # loop.set_postfix(loss_avg=loss.item()/BATCH_SIZE)
         if epoch %  SHOW_SCATTER_EVERY== 0:
             show_scatter()
     mlflow.log_param('acc_arr', acc_arr)

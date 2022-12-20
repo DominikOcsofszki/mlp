@@ -1564,3 +1564,52 @@ class Vae_h200_l2(nn.Module):
         eps = torch.randn_like(sigma)  # == torch.randn_like(mu) == torch.randn_like(sigma)
         z = mu + sigma * eps
         return z
+
+class Vae_var(nn.Module):
+    def __init__(self, hidden_units=200, latent=2):  # From paper hidden_units = 500 /
+        super().__init__()  # no overiffiting of superflouse latent variables,
+        self.flatten = nn.Flatten(start_dim=1)
+        # encode:
+        self.img_to_hiden = nn.Linear(28 * 28, hidden_units)
+        self.hiden_to_mu = nn.Linear(hidden_units, latent)
+        self.hiden_to_sigma = nn.Linear(hidden_units, latent)
+        # decode
+        self.latent_to_hiden = nn.Linear(latent, hidden_units)
+        self.hiden_to_rec_img = nn.Linear(hidden_units, 28 * 28)
+        self.relu = nn.ReLU()
+        self.sigma = nn.Sigmoid()
+
+    def return_loss_criterion_optimizer(self, lr_rate):
+        criterion = nn.CrossEntropyLoss()
+        optimizer = optim.Adam(self.parameters(), lr=lr_rate)
+        return criterion, optimizer
+
+    def loss_calculated_plus_term(self, loss):
+        return loss  # ToDo here we have to add the formular from paper
+
+    def encode(self, x):
+        x = self.flatten(x)
+        x = self.relu(self.img_to_hiden(x))
+        mu = self.hiden_to_mu(x)
+        sigma = self.hiden_to_sigma(x)
+        return mu, sigma
+
+    def decode(self, z):
+        z = self.relu(self.latent_to_hiden(z))
+        # z = self.relu(self.hiden_to_rec_img(z))
+        z = self.sigma(self.hiden_to_rec_img(z))
+
+        return z
+
+    def forward(self, x):
+        mu, sigma = self.encode(x)
+        eps = torch.randn_like(sigma)  # == torch.randn_like(mu) == torch.randn_like(sigma)
+        z = mu + sigma * eps
+        x = self.decode(z)
+        return x,mu,sigma
+    def calc_z(self, mu, sigma):
+        # mu, sigma = self.encode(x)
+        eps = torch.randn_like(sigma)  # == torch.randn_like(mu) == torch.randn_like(sigma)
+        z = mu + sigma * eps
+        # x = self.decode(z)
+        return z

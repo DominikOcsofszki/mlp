@@ -19,7 +19,7 @@ def import_model_name(model_x, activate_eval=True):
     return model_x
 
 
-def show_images_with_model(count_of_images=5, model=None, only_return_images_labels=False,training_set=False):
+def show_images_with_model(count_of_images=5, model=None, only_return_images_labels=False, training_set=False):
     if model is None:
         PATH_weight_classify = '/Users/dominikocsofszki/PycharmProjects/mlp/data/weights/weights_model_classifier'
         model_classify = MyModel5()
@@ -188,10 +188,14 @@ def show_scatter_lattent_3D(examples, model_loaded, cmap='Dark2'):
     plt.show()
 
 
-def show_scatter_lat(examples, model_loaded, lat: int = 2, cmap='Dark2', train=False, use_training_set = False):
+def show_scatter_lat(examples, model_loaded, lat: int = 2, cmap='Dark2', train=False, use_training_set=False):
     if not train: model_loaded = import_model_name(model_x=model_loaded, activate_eval=True)
-    images, labels = show_images_with_model(examples, model=model_loaded, only_return_images_labels=True,training_set=use_training_set)
+    images, labels = show_images_with_model(examples, model=model_loaded, only_return_images_labels=True,
+                                            training_set=use_training_set)
     z = model_loaded.forward_return_z(images)
+    # z = model_loaded.encode(images)
+    # print(f'{z.shape = }')
+    # print(z)
     z_detached = z.detach().numpy()
     plt.figure(figsize=(10, 10))
     if lat == 2:
@@ -202,6 +206,31 @@ def show_scatter_lat(examples, model_loaded, lat: int = 2, cmap='Dark2', train=F
                         cmap=cmap)  # ToDo looks nice!
         else:
             print('lat == 2|3')
+
+    plt.colorbar()
+    plt.show()
+
+
+def show_scatter_lat_mu_sigma(examples, model_loaded, lat: int = 2, cmap='Dark2', in_train_class=False, use_training_set=False):
+    if not in_train_class: model_loaded = import_model_name(model_x=model_loaded, activate_eval=True)
+    images, labels = show_images_with_model(examples, model=model_loaded, only_return_images_labels=True,
+                                            training_set=use_training_set)
+    # z = model_loaded.forward_return_z(images)
+    mu, sigma = model_loaded.encode(images)
+    z = model_loaded.calc_z(mu, sigma)
+    z_det = z.detach().numpy()
+    # mu_det,sigma_det = mu.detach().numpy(), sigma.detach().numpy()
+    print(f'{z_det.shape = }')
+    # print(f'{sigma_det.shape = }')
+    plt.figure(figsize=(10, 10))
+    if lat == 2:
+        plt.scatter(z_det[:, 0], z_det[:, 1], c=labels, cmap=cmap, alpha=0.5)  # ToDo looks nice!
+    # else:
+    #     if lat == 3:
+    #         plt.scatter(z_detached[:, 0], z_detached[:, 1], z_detached[:, 2], c=labels,
+    #                     cmap=cmap)  # ToDo looks nice!
+    #     else:
+    #         print('lat == 2|3')
 
     plt.colorbar()
     plt.show()
