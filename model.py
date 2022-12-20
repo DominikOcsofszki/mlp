@@ -1566,7 +1566,7 @@ class Vae_h200_l2(nn.Module):
         return z
 
 class Vae_var(nn.Module):
-    def __init__(self, hidden_units=200, latent=2):  # From paper hidden_units = 500 /
+    def __init__(self, hidden_units=700, latent=2):  # From paper hidden_units = 500 /
         super().__init__()  # no overiffiting of superflouse latent variables,
         self.flatten = nn.Flatten(start_dim=1)
         # encode:

@@ -6,9 +6,9 @@ from torchvision import datasets
 import torch
 from model import MyModel5
 import numpy as np
+import torch.nn as nn
 
-
-def import_model_name(model_x, activate_eval=True):
+def import_model_name(model_x:nn.Module, activate_eval=True):
     model_name = model_x._get_name()
     print(f'{model_name = }')
     save_name_model = model_name + '_weights'
@@ -215,23 +215,21 @@ def show_scatter_lat_mu_sigma(examples, model_loaded, lat: int = 2, cmap='Dark2'
     if not in_train_class: model_loaded = import_model_name(model_x=model_loaded, activate_eval=True)
     images, labels = show_images_with_model(examples, model=model_loaded, only_return_images_labels=True,
                                             training_set=use_training_set)
-    # z = model_loaded.forward_return_z(images)
     mu, sigma = model_loaded.encode(images)
-    z = model_loaded.calc_z(mu, sigma)
+    # z = model_loaded.calc_z(mu, sigma)
+    print(mu,sigma)
+    z = mu + sigma
+    print(f'{mu[0]=}')
+    print(f'{sigma[0]=}')
+
+    print(f'{z[0]=}')
     z_det = z.detach().numpy()
-    # mu_det,sigma_det = mu.detach().numpy(), sigma.detach().numpy()
-    print(f'{z_det.shape = }')
-    # print(f'{sigma_det.shape = }')
+
     plt.figure(figsize=(10, 10))
     if lat == 2:
-        plt.scatter(z_det[:, 0], z_det[:, 1], c=labels, cmap=cmap, alpha=0.5)  # ToDo looks nice!
-    # else:
-    #     if lat == 3:
-    #         plt.scatter(z_detached[:, 0], z_detached[:, 1], z_detached[:, 2], c=labels,
-    #                     cmap=cmap)  # ToDo looks nice!
-    #     else:
-    #         print('lat == 2|3')
-
+        plt.scatter(z_det[:, 0], z_det[:, 1], c=labels, cmap=cmap, alpha=0.9)  # ToDo looks nice!
+    if lat == 3:
+        plt.scatter(z_det[:, 0], z_det[:, 1],z_det[:, 2], c=labels, cmap=cmap, alpha=0.5)  # ToDo looks nice!
     plt.colorbar()
     plt.show()
 
@@ -239,6 +237,18 @@ def show_scatter_lat_mu_sigma(examples, model_loaded, lat: int = 2, cmap='Dark2'
 def latent_to_plt_img(modelpick, rand_lat_size=2):
     # rand_lat = torch.rand(2)
     rand_lat = torch.rand(rand_lat_size)
+    z = modelpick.decode(rand_lat)
+    print(rand_lat.shape)
+    print(f'{rand_lat = }')
+
+    z_reshaped = z.view(28, 28)
+    print(z.shape)
+    print(z_reshaped.shape)
+
+    znew = z_reshaped.detach()
+    plt.imshow(znew)
+def latent_rand_to_img(modelpick, tensor_rand):
+    rand_lat = tensor_rand
     z = modelpick.decode(rand_lat)
     print(rand_lat.shape)
     print(f'{rand_lat = }')
