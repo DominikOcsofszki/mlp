@@ -19,21 +19,20 @@ def import_model_name(model_x, activate_eval=True):
     return model_x
 
 
-def show_images_with_model(count_of_images=5, model=None, only_return_images_labels=False):
+def show_images_with_model(count_of_images=5, model=None, only_return_images_labels=False,training_set=False):
     if model is None:
         PATH_weight_classify = '/Users/dominikocsofszki/PycharmProjects/mlp/data/weights/weights_model_classifier'
-        # PATH_weight_classify = '/Users/dominikocsofszki/PycharmProjects/mlp/data/weights/MyModel5_weights'
         model_classify = MyModel5()
         model_classify.load_state_dict(torch.load(PATH_weight_classify))
         model_classify.eval()
         model = model_classify
     model.eval()
     testset = datasets.MNIST(root='data/testset', transform=transforms.ToTensor(), download=True,
-                             train=False)  ###TODO MISSED THE TRAIN!!!
-    print(f"{testset.__len__() = }")
+                             train=training_set)
     testsetloader = torch.utils.data.DataLoader(testset, batch_size=count_of_images, shuffle=True)  # TODO shuffle for
     testing_images, labels = next(iter(testsetloader))
-    if only_return_images_labels: return testing_images, labels
+    if only_return_images_labels:
+        return testing_images, labels
     if count_of_images == 1: num_of_tests = 2
     num_of_tests = testing_images.__len__()
     size_fig = 15
@@ -176,20 +175,52 @@ def show_scatter_lattent(examples, model_loaded, cmap='Dark2'):
     cbar.set_label('labels')
     plt.show()
 
+
 def show_scatter_lattent_3D(examples, model_loaded, cmap='Dark2'):
     # model_loaded = model.VaeMe_200_hidden()
     mymodel = import_model_name(model_x=model_loaded, activate_eval=True)
     images, labels = show_images_with_model(examples, model=model_loaded, only_return_images_labels=True)
     z = mymodel.forward_return_z(images)
-    # print(z[0])
     z_detached = z.detach().numpy()
-    # labels_detached = labels.detach().numpy()
-    # z_detached = np.column_stack((z_detached, labels_detached))
-    # print(f'{labels_detached.shape = }')
     plt.figure(figsize=(10, 10))
-    plt.scatter(z_detached[:, 0], z_detached[:, 1],z_detached[:, 2], c=labels, cmap=cmap)  # ToDo looks nice!
+    plt.scatter(z_detached[:, 0], z_detached[:, 1], z_detached[:, 2], c=labels, cmap=cmap)  # ToDo looks nice!
     plt.colorbar()
     plt.show()
+
+
+def show_scatter_lat(examples, model_loaded, lat: int = 2, cmap='Dark2', train=False, use_training_set = False):
+    if not train: model_loaded = import_model_name(model_x=model_loaded, activate_eval=True)
+    images, labels = show_images_with_model(examples, model=model_loaded, only_return_images_labels=True,training_set=use_training_set)
+    z = model_loaded.forward_return_z(images)
+    z_detached = z.detach().numpy()
+    plt.figure(figsize=(10, 10))
+    if lat == 2:
+        plt.scatter(z_detached[:, 0], z_detached[:, 1], c=labels, cmap=cmap)  # ToDo looks nice!
+    else:
+        if lat == 3:
+            plt.scatter(z_detached[:, 0], z_detached[:, 1], z_detached[:, 2], c=labels,
+                        cmap=cmap)  # ToDo looks nice!
+        else:
+            print('lat == 2|3')
+
+    plt.colorbar()
+    plt.show()
+
+
+def latent_to_plt_img(modelpick, rand_lat_size=2):
+    # rand_lat = torch.rand(2)
+    rand_lat = torch.rand(rand_lat_size)
+    z = modelpick.decode(rand_lat)
+    print(rand_lat.shape)
+    print(f'{rand_lat = }')
+
+    z_reshaped = z.view(28, 28)
+    print(z.shape)
+    print(z_reshaped.shape)
+
+    znew = z_reshaped.detach()
+    plt.imshow(znew)
+
 
 def print_imported_functions():
     print('imported Functions:')

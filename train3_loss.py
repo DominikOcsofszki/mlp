@@ -17,11 +17,11 @@ from tqdm import tqdm
 TEST_ONLY_LAST = False
 TEST_AFTER_EPOCH = 11
 COUNT_PRINTS = 30
-EPOCHS = 1
+EPOCHS = 20
 
 #
 LR_RATE = 3e-4
-pick_model = model.VaeMe_500hidden_2lat_bce_loss()
+pick_model = model.Vae_500h_2l()
 ADD_TEXT = ''
 RUN_SAVE_NAME = pick_model.__class__.__name__ + str(ADD_TEXT)
 print(f'{RUN_SAVE_NAME = }')
@@ -31,7 +31,7 @@ mlflow.set_experiment("train_new_loss_function")
 
 # with mlflow.start_run(run_name=pick_model.__class__.__name__):
 with mlflow.start_run(run_name=RUN_SAVE_NAME):
-    BATCH_SIZE = 2**11
+    BATCH_SIZE = 2**6
     pick_device = 'cpu'
     DEVICE = torch.device(pick_device)  # alternative 'mps' - but no speedup...
     model = pick_model.to(DEVICE)
@@ -71,19 +71,15 @@ with mlflow.start_run(run_name=RUN_SAVE_NAME):
 
     # Test function
     def test(dataloader, model_test):
-        print_true = True
-
         model_test.eval()
         test_loss, correct = 0, 0
         with torch.no_grad():
             for X, y in dataloader:
                 X, y = X.to(DEVICE), y.to(DEVICE)
                 pred_mat, mu_mat, sigma_mat = model_test(X)
-                if (print_true) :
-                    loss = loss_calc(X, pred_mat, mu_mat, sigma_mat)
-                    print_true  = False
+                loss = loss_calc(X, pred_mat, mu_mat, sigma_mat)
                 print(loss)
-                test_loss += loss.sum()
+                test_loss += loss.item()
         num_batches = len(dataloader)
         test_loss /= num_batches
         print(f'{epoch = } Avg loss: {test_loss:>8f}\n')
@@ -92,21 +88,34 @@ with mlflow.start_run(run_name=RUN_SAVE_NAME):
     accuracy, avg_loss = 0, 0
     acc_arr = []
 
+    # for epoch in range(EPOCHS):
+    #     running_loss = 0.0
+    #     loop = tqdm(enumerate(trainloader))
+    #     for i, data in loop:  # index = 0 could be deleted
+    #
+    #         X, y = data
+    #         X, y = X.to(DEVICE), y.to(DEVICE)
+    #
+    #         optimizer.zero_grad()
+    #         img_reconstructed, mu, sigma = model(X)
+    #         loss = loss_calc(X, img_reconstructed, mu, sigma)
+    #         loss.backward()
+    #         optimizer.step()
+
     for epoch in range(EPOCHS):
-
-        running_loss = 0.0
         loop = tqdm(enumerate(trainloader))
-        for i, data in loop:  # index = 0 could be deleted
-
-            X, y = data
-            X, y = X.to(DEVICE), y.to(DEVICE)
-
+        for i, (x, _) in loop:
+            x = x.to(DEVICE).view(x.shape[0], 28*28)  # TODO why?
+            x_reconstruction, mu, sigma = model(x)
+            reconstruction_loss = criterion(x_reconstruction, x)
+            kl_div = -torch.sum(
+                1 + torch.log(sigma.pow(2)) - mu.pow(2) - sigma.pow(2))  # TODO Search in paper #minus for torch?
+            loss = reconstruction_loss + kl_div  # TODO Could also change or add alpha,beta weighting!
             optimizer.zero_grad()
-            img_reconstructed, mu, sigma = model(X)
-            loss = loss_calc(X, img_reconstructed, mu, sigma)
             loss.backward()
             optimizer.step()
-    test(dataloader=testsetloader, model_test=model)
+
+        # test(dataloader=testsetloader, model_test=model)
     mlflow.log_param('acc_arr', acc_arr)
     mlflow.log_param('accuracy', accuracy)
     mlflow.log_param('avg_loss', avg_loss)

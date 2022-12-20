@@ -18,12 +18,12 @@ from tqdm import tqdm
 TEST_ONLY_LAST = True
 TEST_AFTER_EPOCH = 11
 COUNT_PRINTS = 5
-EPOCHS = 10
+EPOCHS = 300
 
 #
 LR_RATE = 3e-4
 # pick_model = model.VaeMe_200_hidden()
-pick_model = model.Vae_500h_2l()
+pick_model = model.Vae_500h_2l_sigma()
 ADD_TEXT = ''
 RUN_SAVE_NAME = pick_model.__class__.__name__ + str(ADD_TEXT)
 print(f'{RUN_SAVE_NAME = }')
@@ -34,17 +34,20 @@ with mlflow.start_run(run_name=RUN_SAVE_NAME):
     for x in pick_model.parameters() :
         print (x.shape)
     print(list(pick_model.parameters()))
+    # MOMENTUM = 0.9
+    # BATCH_SIZE = 32 * 2 ** 1
+    BATCH_SIZE = 16 * 2**1
 
-
-    MOMENTUM = 0.9
-    BATCH_SIZE = 32 * 2 ** 1
     pick_device = 'cpu'
     DEVICE = torch.device(pick_device)  # alternative 'mps' - but no speedup...
     model = pick_model.to(DEVICE)
+    print('its needed:')
+
+    print(60000/BATCH_SIZE)
 
     mlflow.log_param('epochs', EPOCHS)
     mlflow.log_param('LR_RATE', LR_RATE)
-    mlflow.log_param('MOMENTUM', MOMENTUM)
+    # mlflow.log_param('MOMENTUM', MOMENTUM)
     mlflow.log_param('batch_size', BATCH_SIZE)
     mlflow.log_param('pick_device', pick_device)
     model_entries = [entry for entry in model.modules()]  ##need to ignore other files!?!?<<<<<<<<
@@ -58,7 +61,7 @@ with mlflow.start_run(run_name=RUN_SAVE_NAME):
 
     # Downloading the dataset
     trainset = datasets.MNIST(root='data/dataset', train=True, transform=transforms.ToTensor(), download=True)
-    testset = datasets.MNIST(root='data/testset', transform=transforms.ToTensor(), download=True) #TODO use train3!!!
+    testset = datasets.MNIST(root='data/testset', train=False, transform=transforms.ToTensor(), download=True) #TODO use train3!!!
     # assert False #TODO do not use testset is missing train=False! For comparing here
 
     # Filter for only two classes #TODO Not sure yet if it is needed
