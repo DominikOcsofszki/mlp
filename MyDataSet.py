@@ -102,3 +102,5 @@ class MyDataSets_Subset:
 
     def for_plotting_dataloader_test_full(self):
         return next(iter(self.dataloader_test_full))
+    def for_plotting_dataloader_test_subset(self):
+        return next(iter(self.test_loader_subset))

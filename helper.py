@@ -1,4 +1,3 @@
-
 import model
 from torchvision.transforms import transforms
 from torch.utils.data import Dataset
@@ -9,6 +8,7 @@ from model import MyModel5
 import numpy as np
 import torch.nn as nn
 from MyDataSet import MyDataSets
+
 
 # (class_nr_0 = False,class_nr_1 = False,class_nr_2 = False,class_nr_3 = False,
 #                class_nr_4 = False,class_nr_5 = False,class_nr_6 = False,class_nr_7 = False,
@@ -47,7 +47,7 @@ class MyDataSets_old:
 
 
 class MyDataSets_changed_in_new_class:
-    def __init__(self, tuble=(4, 9), batch_size_train=16,batch_size_test=10000):
+    def __init__(self, tuble=(4, 9), batch_size_train=16, batch_size_test=10000):
         self.batch_size_train = batch_size_train
         self.batch_size_test = batch_size_test
         self.dataset_train_full = datasets.MNIST(root='data/dataset', train=True, transform=transforms.ToTensor(),
@@ -373,16 +373,16 @@ def show_scatter_binary_train(model_loaded, mydataset: MyDataSets, current_epoch
 def show_scatter_binary_dataset(model: nn.Module, mydataset: MyDataSets, current_epoch='epoch_information'):
     model.eval()
 
-    # testing_images, labels = next(iter(mydataset.dataloader_test_full))
-    testing_images, labels =  mydataset.for_plotting_dataloader_test_full()
-    # print(testing_images)
+    testing_images, labels = mydataset.for_plotting_dataloader_test_full()
     mu, sigma = model.encode(testing_images)
-    print(f'{mu = }')
+    # print(f'scatter_plot: {mu}')
     z = mu
+    print(f'{z.mean() = }')
     z_det = z.detach().numpy()
     model.train()
     plt.figure(figsize=(10, 10))
-    plt.scatter(z_det[:, 0], z_det[:, 1], c=labels, cmap='Dark2_r', alpha=0.9)  # ToDo looks nice!
+    # plt.scatter(z_det[:, 0], z_det[:, 1], c=labels, cmap='Dark2_r', alpha=0.9)
+    plt.scatter(z_det[:, 0], z_det[:, 1], c=labels, cmap='tab10', alpha=0.9)
     plt.colorbar()
     plt.title(f'{current_epoch = }')
     plt.show()
