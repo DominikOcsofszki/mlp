@@ -1,10 +1,5 @@
 import os
 
-import torch
-import torchvision
-import torchvision.datasets as datasets
-import torchvision.transforms as transforms
-import torch.optim as optim
 import torch.utils.data
 import torch.nn as nn
 
@@ -12,23 +7,37 @@ import helper
 import model
 import mlflow
 from tqdm import tqdm
-from helper import MyDataSets
-
-# ----------------------
-# pick_model = model.Vae_var()
-pick_model = model.Vae_var_28_28()
-
-
+from MyDataSet import MyDataSets
+##############################################################################################################
+##############################################################################################################
+start_database_terminal = 'pg_ctl -D /Users/dominikocsofszki/PycharmProjects/mlp/sql/sql1 -l logfile start'
+start_mlflow_server ='mlflow server --backend-store-uri postgresql://mlflow@localhost/mlflow_db --default-artifact-root file:"/Users/dominikocsofszki/PycharmProjects/mlp/mlruns" -h 0.0.0.0 -p 8000'
+##############################################################################################################
+##############################################################################################################
+def mlflow_start_log_first(EPOCHS,LR_RATE,BATCH_SIZE,pick_device,model) :
+    print(f'{BATCH_SIZE = }')
+    mlflow.log_param('epochs', EPOCHS)
+    mlflow.log_param('LR_RATE', LR_RATE)
+    # mlflow.log_param('MOMENTUM', MOMENTUM)
+    mlflow.log_param('batch_size', BATCH_SIZE)
+    mlflow.log_param('pick_device', pick_device)
+    mlflow.log_param('model_name_full', model.__class__)
+    mlflow.log_param('model_name', model.__class__.__name__)
+##############################################################################################################
+##############################################################################################################
 def show_scatter(model, mydataset, current_epoch='epoch_information'):
     helper.show_scatter_binary_dataset(model=model, mydataset=mydataset, current_epoch=current_epoch)
     # helper.
+##############################################################################################################
+##############################################################################################################
+##############################################################################################################
+##############################################################################################################
 
+pick_model = model.Vae_var_28_28()
+BATCH_SIZE = 2 ** 8
 
 use_classes = (4, 9)
-MYDATASET = MyDataSets(tuble=use_classes)
-# ---------------------=
-# pg_ctl -D /Users/dominikocsofszki/PycharmProjects/mlp/sql/sql1 -l logfile start
-# mlflow server --backend-store-uri postgresql://mlflow@localhost/mlflow_db --default-artifact-root file:"/Users/dominikocsofszki/PycharmProjects/mlp/mlruns" -h 0.0.0.0 -p 8000
+MYDATASET = MyDataSets(tuble=use_classes,batch_size_train=BATCH_SIZE)
 # DEBUG PARAMS:
 TEST_ONLY_LAST = True
 TEST_AFTER_EPOCH = 11
@@ -38,31 +47,29 @@ SHOW_SCATTER_EVERY = 5
 
 #
 # LR_RATE = 3e-4
-BATCH_SIZE = 16 * 2 ** 1
 LR_RATE = 3e-4
 ADD_TEXT = ''
 RUN_SAVE_NAME = pick_model.__class__.__name__ + str(ADD_TEXT)
 print(f'{RUN_SAVE_NAME = }')
 HAS_LOSS_FUNCTION = True  # TODO If model has loss function implemented
 os.environ['MLFLOW_TRACKING_URI'] = 'http://localhost:8000/'  # TODO Use this for SQL \ Delete for using local
+print(f'connecting to: http://localhost:8000/')
+print('if not working: open terminal with conda env mlp(source activate mlp):')
+print(start_database_terminal)
+print(start_mlflow_server)
 with mlflow.start_run(run_name=RUN_SAVE_NAME):
-    print(f'{BATCH_SIZE = }')
     pick_device = 'cpu'
     DEVICE = torch.device(pick_device)  # alternative 'mps' - but no speedup...
     model = pick_model.to(DEVICE)
-    mlflow.log_param('epochs', EPOCHS)
-    mlflow.log_param('LR_RATE', LR_RATE)
-    # mlflow.log_param('MOMENTUM', MOMENTUM)
-    mlflow.log_param('batch_size', BATCH_SIZE)
-    mlflow.log_param('pick_device', pick_device)
-    model_entries = [entry for entry in model.modules()]  ##need to ignore other files!?!?<<<<<<<<
-    print(f'{model_entries.__len__()}')
-    mlflow.log_param('model_name_full', model.__class__)
-    mlflow.log_param('model_name', model.__class__.__name__)
+    mlflow_start_log_first(EPOCHS, LR_RATE, BATCH_SIZE, pick_device, model)
+
     # ------------------TRACKING-----------------------
 
-    trainloader = torch.utils.data.DataLoader(MYDATASET.trainset, batch_size=BATCH_SIZE)  # No shuffle for reproducibility
-    testsetloader = torch.utils.data.DataLoader(MYDATASET.testset, batch_size=BATCH_SIZE)
+    # trainloader = torch.utils.data.DataLoader(MYDATASET.trainset, batch_size=BATCH_SIZE)  # No shuffle for reproducibility
+    # testsetloader = torch.utils.data.DataLoader(MYDATASET.testset, batch_size=BATCH_SIZE)
+    trainloader = MYDATASET.dataloader_train_full
+    testloader = MYDATASET.dataloader_test_full
+
 
     loss_arr = []
     test_img_after_epochs = []
@@ -100,12 +107,11 @@ with mlflow.start_run(run_name=RUN_SAVE_NAME):
     show_scatter(mydataset=MYDATASET, model=model, current_epoch=str(epoch))
     print('finish!!!')
 
-    # SAVE_NAME_MODEL = model.__class__.__name__ + '_weights'
     SAVE_NAME_MODEL = RUN_SAVE_NAME + '_weights'
-    # PATH = '/Users/dominikocsofszki/PycharmProjects/mlp/data/weights/weights_training'
-    # PATH = '/Users/dominikocsofszki/PycharmProjects/mlp/data/weights/weights_model_classifier_soft'
     PATH = '/Users/dominikocsofszki/PycharmProjects/mlp/data/weights/' + SAVE_NAME_MODEL
 
     print(f'save weights at {PATH = }')
-    print(f'{PATH = }')
+    print(f'{PATH}')
     torch.save(model.state_dict(), PATH)
+
+

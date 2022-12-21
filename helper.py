@@ -1,4 +1,3 @@
-import numpy
 
 import model
 from torchvision.transforms import transforms
@@ -9,13 +8,13 @@ import torch
 from model import MyModel5
 import numpy as np
 import torch.nn as nn
-
+from MyDataSet import MyDataSets
 
 # (class_nr_0 = False,class_nr_1 = False,class_nr_2 = False,class_nr_3 = False,
 #                class_nr_4 = False,class_nr_5 = False,class_nr_6 = False,class_nr_7 = False,
 #                class_nr_8 = False,class_nr_9 = False, all_classes=False)
 
-class MyDataSets:
+class MyDataSets_old:
     def __init__(self, all_classes=False, tuble=(4, 9)):
         trainset = datasets.MNIST(root='data/dataset', train=True, transform=transforms.ToTensor())
         testset = datasets.MNIST(root='data/testset', train=False, transform=transforms.ToTensor())
@@ -33,16 +32,62 @@ class MyDataSets:
             indices_train = torch.vstack(indices_train).reshape(-1)
             indices_test = torch.vstack(indices_test).reshape(-1)
             filtered_trainset = torch.utils.data.Subset(dataset=trainset, indices=indices_train)
+            torch.hstack(filtered_trainset)
             filtered_testset = torch.utils.data.Subset(dataset=testset, indices=indices_test)
-
+            ##Convert to Tensor
+            Tensortrain, Tensortrain_label = [(x[0], x[1]) for x in filtered_trainset]
+            #############
             self.trainset = filtered_trainset
             self.testset = filtered_testset
 
-            self.trainset_size = indices_train.shape
-            self.testset_size = indices_test.shape
+            self.trainset_size = indices_train.size()[0]
+            self.testset_size = indices_test.size()[0]
         print(f'{self.trainset_size = }')
         print(f'{self.testset_size = }')
 
+
+class MyDataSets_changed_in_new_class:
+    def __init__(self, tuble=(4, 9), batch_size_train=16,batch_size_test=10000):
+        self.batch_size_train = batch_size_train
+        self.batch_size_test = batch_size_test
+        self.dataset_train_full = datasets.MNIST(root='data/dataset', train=True, transform=transforms.ToTensor(),
+                                                 download=True)
+        self.dataset_test_full = datasets.MNIST(root='data/testset', train=False, transform=transforms.ToTensor(),
+                                                download=True)
+        self.dataloader_train_full = torch.utils.data.DataLoader(self.dataset_train_full, shuffle=True,
+                                                                 batch_size=self.batch_size_train)
+        self.dataloader_test_full = torch.utils.data.DataLoader(self.dataset_train_full, shuffle=True,
+                                                                batch_size=self.batch_size_test)
+
+        _trainset_full = datasets.MNIST(root='data/dataset', train=True, transform=transforms.ToTensor(), download=True)
+        _testset_full = datasets.MNIST(root='data/testset', train=False, transform=transforms.ToTensor(), download=True)
+
+        _train_idx_4 = np.asarray(_trainset_full.targets == 4).nonzero()
+        _train_idx_9 = np.asarray(_trainset_full.targets == 9).nonzero()
+
+        self.train_loader_subset_size = _train_idx = np.hstack(_train_idx_4 + _train_idx_9)
+        _size_train = len(_train_idx)
+        # print(f'{_train_idx = }')
+        # print(f'{_size_train = }')
+        _train_subset = torch.utils.data.Subset(_trainset_full, _train_idx)
+        self.train_loader_subset = torch.utils.data.DataLoader(_train_subset, shuffle=True, batch_size=_size_train)
+
+        # _test_idx = np.where(_testset_full.targets == (4 | 9))[0]
+
+        _test_idx_4 = np.asarray(_testset_full.targets == 4).nonzero()
+        _test_idx_9 = np.asarray(_testset_full.targets == 9).nonzero()
+
+        _test_idx = np.hstack(_test_idx_4 + _test_idx_9)
+
+        # train_idx = np.where(testset.targets == tuble)[0]
+        self.test_loader_subset_size = _size_test = len(_test_idx)
+        _test_subset = torch.utils.data.Subset(_testset_full, _test_idx)
+        self.test_loader_subset = torch.utils.data.DataLoader(_test_subset, shuffle=True, batch_size=_size_test)
+        # self.test_loader_subset_size = (self.test_loader_subset).l
+
+        print(f'{self.train_loader_subset_size = }')
+        print(f'{self.train_loader_subset = }')
+        print(f'{self.test_loader_subset_size = }')
 
 
 def import_model_name(model_x: nn.Module, activate_eval=True):
@@ -309,7 +354,7 @@ def show_scatter(examples, model_loaded, lat: int = 2, cmap='Dark2', in_train_cl
     plt.show()
 
 
-def show_scatter_binary_train(model_loaded, mydataset:MyDataSets, current_epoch='epoch_information'):
+def show_scatter_binary_train(model_loaded, mydataset: MyDataSets, current_epoch='epoch_information'):
     size = mydataset.testset
     testsetloader = torch.utils.data.DataLoader(mydataset.testset_size, batch_size=size)  # TODO shuffle for
     testing_images, labels = next(iter(testsetloader))
@@ -324,20 +369,25 @@ def show_scatter_binary_train(model_loaded, mydataset:MyDataSets, current_epoch=
     plt.title(f'{current_epoch = }')
     plt.show()
 
-def show_scatter_binary_dataset(model:nn.Module, mydataset:MyDataSets, current_epoch='epoch_information'):
+
+def show_scatter_binary_dataset(model: nn.Module, mydataset: MyDataSets, current_epoch='epoch_information'):
     model.eval()
-    testing_images, labels = next(iter(mydataset.testset))
-    print(testing_images)
+
+    # testing_images, labels = next(iter(mydataset.dataloader_test_full))
+    testing_images, labels =  mydataset.for_plotting_dataloader_test_full()
+    # print(testing_images)
     mu, sigma = model.encode(testing_images)
     print(f'{mu = }')
     z = mu
     z_det = z.detach().numpy()
     model.train()
     plt.figure(figsize=(10, 10))
-    plt.scatter(z_det[:, 0], z_det[:, 1], c=labels, cmap='Accent', alpha=0.9)  # ToDo looks nice!
+    plt.scatter(z_det[:, 0], z_det[:, 1], c=labels, cmap='Dark2_r', alpha=0.9)  # ToDo looks nice!
     plt.colorbar()
     plt.title(f'{current_epoch = }')
     plt.show()
+
+
 def latent_to_plt_img(modelpick, rand_lat_size=2):
     # rand_lat = torch.rand(2)
     rand_lat = torch.rand(rand_lat_size)
