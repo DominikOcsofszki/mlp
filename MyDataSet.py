@@ -55,7 +55,7 @@ class MyDataSets:
         return next(iter(self.dataloader_test_full))
 
 class MyDataSets_Subset:
-    def __init__(self, tuble=(4, 9), batch_size_train=16,batch_size_test=10000):
+    def __init__(self, batch_size_train=16,batch_size_test=10000):
         print('MyDataSets.MyDataSets_Subset.__init__')
         self.batch_size_train = batch_size_train
         self.batch_size_test = batch_size_test
@@ -102,5 +102,13 @@ class MyDataSets_Subset:
 
     def for_plotting_dataloader_test_full(self):
         return next(iter(self.dataloader_test_full))
-    def for_plotting_dataloader_test_subset(self):
+    # def for_plotting_dataloader_test_subset(self):
+    #     return next(iter(self.test_loader_subset))
+    def dataloader_train_subset(self):
+        return self.train_loader_subset
+    def dataloader_train_subset_one_batch(self):
+        return next(iter(self.train_loader_subset))
+    def dataloader_test_subset(self):
+        return self.test_loader_subset
+    def dataloader_test_subset_one_batch(self):
         return next(iter(self.test_loader_subset))

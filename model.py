@@ -1770,8 +1770,9 @@ class VaeFinal(nn.Module):
         self.hidden_to_hidden2 = nn.Linear(HIDDEN_1_LAYER, HIDDEN_2_LAYER)
 
         self.hidden2_to_rec_img = nn.Linear(HIDDEN_2_LAYER, 28 * 28)
-        self.activation = nn.ReLU()
-        # self.activation = nn.ELU()
+        # self.activation = nn.ReLU()
+        self.activation = nn.ELU()
+        # self.sigmoid = nn.Sigmoid()
         self.sigmoid = nn.Sigmoid()
         # self.relu = nn.
 

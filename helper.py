@@ -7,7 +7,7 @@ import torch
 from model import MyModel5
 import numpy as np
 import torch.nn as nn
-from MyDataSet import MyDataSets
+from MyDataSet import MyDataSets, MyDataSets_Subset
 
 
 # (class_nr_0 = False,class_nr_1 = False,class_nr_2 = False,class_nr_3 = False,
@@ -370,10 +370,12 @@ def show_scatter_binary_train(model_loaded, mydataset: MyDataSets, current_epoch
     plt.show()
 
 
-def show_scatter_binary_dataset(model: nn.Module, mydataset: MyDataSets, current_epoch='epoch_information'):
+def show_scatter_binary_dataset(model: nn.Module, mydataset_subset: MyDataSets_Subset, current_epoch='epoch_information'):
     model.eval()
 
-    testing_images, labels = mydataset.for_plotting_dataloader_test_full()
+    # testing_images, labels = mydataset.for_plotting_dataloader_test_full()
+    # testing_images, labels = mydataset_subset.dataloader_test_subset()
+    testing_images, labels = mydataset_subset.dataloader_test_subset_one_batch()
     mu, sigma = model.encode(testing_images)
     # print(f'scatter_plot: {mu}')
     z = mu

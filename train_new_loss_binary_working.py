@@ -40,11 +40,11 @@ def issues_with_connecting(having_issues=False):
 ##############################################################################################################
 ##############################################################################################################
 def show_scatter(model, mydataset, current_epoch='epoch_information'):
-    helper.show_scatter_binary_dataset(model=model, mydataset=mydataset, current_epoch=current_epoch)
+    helper.show_scatter_binary_dataset(model=model, mydataset_subset=mydataset, current_epoch=current_epoch)
     # helper.
 
 
-def set_params(BATCH_SIZE: int = 2 ** 5, EPOCHS: int = 300, LR_RATE=3e-4):
+def set_params(BATCH_SIZE: int = 2 ** 10, EPOCHS: int = 100, LR_RATE=3e-4):
     return BATCH_SIZE, EPOCHS, LR_RATE
 
 
@@ -52,7 +52,7 @@ def set_debug_params(TEST_AFTER_EPOCH=11, COUNT_PRINTS=5, SHOW_SCATTER_EVERY=5):
     return TEST_AFTER_EPOCH, COUNT_PRINTS, SHOW_SCATTER_EVERY
 
 
-def set_model_params(LATTENT_SPACE=2, HIDDEN_1_LAYER=500, HIDDEN_2_LAYER=200):
+def set_model_params(LATTENT_SPACE=2, HIDDEN_1_LAYER=100, HIDDEN_2_LAYER=100):
     return LATTENT_SPACE, HIDDEN_1_LAYER, HIDDEN_2_LAYER
 
 
@@ -75,7 +75,7 @@ use_classes = (4, 9)
 issues_with_connecting(having_issues=False)
 RUN_SAVE_NAME = pick_model.__class__.__name__ + str('')
 with mlflow.start_run(run_name=RUN_SAVE_NAME):
-    MYDATASET = MyDataSets_Subset(tuble=use_classes, batch_size_train=BATCH_SIZE)
+    MYDATASET = MyDataSets_Subset(batch_size_train=BATCH_SIZE)
     # MYDATASET = MyDataSets(tuble=use_classes,batch_size_train=BATCH_SIZE)
     pick_device = 'cpu'
     DEVICE = torch.device(pick_device)  # alternative 'mps' - but no speedup...
@@ -84,8 +84,8 @@ with mlflow.start_run(run_name=RUN_SAVE_NAME):
 
     # ------------------TRACKING-----------------------
 
-    trainloader = MYDATASET.dataloader_train_full
-    testloader = MYDATASET.dataloader_test_full
+    trainloader = MYDATASET.dataloader_train_subset()
+    testloader = MYDATASET.dataloader_test_subset_one_batch()
 
     loss_arr = []
     test_img_after_epochs = []
@@ -102,7 +102,7 @@ with mlflow.start_run(run_name=RUN_SAVE_NAME):
             kl_div = -torch.sum(
                 1 + torch.log(sigma.pow(2)) - mu.pow(2) - sigma.pow(2))  # TODO Search in paper #minus for torch?
 
-            alpha = 0.6
+            alpha = 0.5
             beta = 1 - alpha
 
             loss = alpha * reconstruction_loss + beta * kl_div  # TODO Could also change or add alpha,beta weighting!
@@ -110,15 +110,15 @@ with mlflow.start_run(run_name=RUN_SAVE_NAME):
             loss.backward()
             optimizer.step()
             loop.set_postfix(loss=loss.item(), loss_avg=loss.item() / BATCH_SIZE)
-            loss_arr.append(loss.item())
+            # loss_arr.append((loss.item()).mean())
             # loop.set_postfix(loss_avg=loss.item()/BATCH_SIZE)
         if epoch % SHOW_SCATTER_EVERY == 0:
             # show_scatter(mydataset=MYDATASET, current_epoch=str(epoch), model=model)
-            show_scatter(mydataset=MYDATASET, current_epoch=str(epoch)+'l,h1,h2 '+str(set_model_params()), model=model)
+            show_scatter(mydataset=MYDATASET, current_epoch=str(epoch)+' l,h1,h2: '+str(set_model_params()), model=model)
     # mlflow.log_param('acc_arr', acc_arr)
     # mlflow.log_param('accuracy', accuracy)
     # mlflow.log_param('avg_loss', avg_loss)
-    print(loss_arr)
+    # print(loss_arr)
     show_scatter(mydataset=MYDATASET, model=model, current_epoch=str(epoch))
     print('finish!!!')
 
