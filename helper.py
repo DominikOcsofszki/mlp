@@ -92,12 +92,12 @@ class MyDataSets_changed_in_new_class:
 
 def import_model_name(model_x: nn.Module, activate_eval=True):
     model_name = model_x._get_name()
-    print(f'{model_name = }')
+    # print(f'{model_name = }')
     save_name_model = model_name + '_weights'
     PATH = '/Users/dominikocsofszki/PycharmProjects/mlp/data/weights/' + save_name_model
     model_x.load_state_dict(torch.load(PATH))
     if activate_eval: model_x.eval()
-    print(f'{save_name_model} imported')
+    # print(f'{save_name_model} imported')
     return model_x
 
 

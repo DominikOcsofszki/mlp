@@ -188,13 +188,32 @@ if __name__ == "__main__":
     device = 'cpu';
     data_dim = 2;
     index = 1
+
+    ##PREPING DATA and loading model
     mydatasets_subset_4_9 = MyDataSets_Subset_4_9(batch_size_train=2)
     dataloader_testset_full = mydatasets_subset_4_9.dataloader_test_subset()
     dataloader_trainset_full = mydatasets_subset_4_9.dataloader_train_subset()
-    model = VaeFinal_only_one_hidden()  # Not trained yet
+    # model = VaeFinal_only_one_hidden()  # Not trained yet
+    import helper  # model_loaded = model.VaeMe_500_hidden()
+    import model
+    import torch
+
+    pick_model = model.VaeFinal_only_one_hidden()
+    model = helper.import_model_name(model_x=pick_model, activate_eval=True)
+    # helper.show_scatter(examples=10000, model_loaded=pick_model, lat=2, in_train_class=False)
+
+    # rand_tensor = torch.rand(2)
+    # helper.latent_rand_to_img(pick_model, rand_tensor)
+
+
+#############################
+#############################
+#############################
+#############################
 
     plt.figure(figsize=(12, 12))
     for U in [U1, U2, U3, U4]:
+    # for U in [U1]:
         # for U in [U1]:
         exact_log_density = lambda z: - U(z)
 
@@ -206,11 +225,11 @@ if __name__ == "__main__":
         index += 2
 
         # for flow_length in [2, 8, 32]:
-        for flow_length in [2]:
+        for flow_length in [2,8,16,100]:
             flow = NormalizingFlow(flow_length, data_dim).to(device)
             optimizer = torch.optim.Adam(flow.parameters(), lr=1e-2)
             # loss = train(flow, optimizer, 20000, exact_log_density, 4096, data_dim)
-            loss = train_me(flow, optimizer, 20000, exact_log_density, 4096, data_dim,
+            loss = train_me(flow, optimizer, 1, exact_log_density, 4096, data_dim,
                             MYDATASETS_SUBSET_4_9=mydatasets_subset_4_9, model_latent_is_2=model)
             # def train(flow, optimizer, nb_epochs, log_density, batch_size, data_dim):
 
@@ -222,5 +241,5 @@ if __name__ == "__main__":
             index += 1
     # plt.savefig('Imgs/learned_densities.pdf')
     # plt.show()
-    plt.savefig('NF_imgs/learned_densities_me_1.pdf')
+    plt.savefig('NF_imgs/learned_densities_me_2.pdf')
     plt.show()

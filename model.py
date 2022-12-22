@@ -1822,7 +1822,8 @@ class VaeFinal(nn.Module):
 class VaeFinal_only_one_hidden(nn.Module):
     def __init__(self, LATTENT_SPACE=2, HIDDEN_1_LAYER=500):  # From paper hidden_units = 500 /
         super().__init__()  # no overiffiting of superflouse latent variables,
-        self.flatten = nn.Flatten(start_dim=1)
+        # self.flatten = nn.Flatten(start_dim=1)
+        self.flatten = nn.Flatten()
         self.img_to_hidden = nn.Linear(28 * 28, HIDDEN_1_LAYER)
 
         self.hidden_to_mu = nn.Linear(HIDDEN_1_LAYER, LATTENT_SPACE)

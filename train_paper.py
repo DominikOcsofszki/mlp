@@ -9,6 +9,7 @@ import MyDataSet
 import helper
 import model
 from MyDataSet import MyDataSets_Subset, MyDataSets, MyDataSets_Subset_4_9
+
 pick_model = model.VaeFinal_only_one_hidden()
 
 ##############################################################################################################
@@ -48,7 +49,7 @@ def show_scatter(model, batch_from_dataloader_iter, current_epoch='epoch_informa
     # helper.
 
 
-def set_params(BATCH_SIZE: int = 128, EPOCHS: int = 300, LR_RATE=3e-4):
+def set_params(BATCH_SIZE: int = 128, EPOCHS: int = 300, LR_RATE=0.0001):
     return BATCH_SIZE, EPOCHS, LR_RATE
 
 
@@ -84,6 +85,9 @@ TEST_AFTER_EPOCH, COUNT_PRINTS, SHOW_SCATTER_EVERY = set_debug_params()
 
 issues_with_connecting(having_issues=False)
 RUN_SAVE_NAME = pick_model.__class__.__name__ + str('')
+
+counter_no_change = 0
+loss_last_min = 999_999
 with mlflow.start_run(run_name=RUN_SAVE_NAME):
     # MyDataSets_Subset = MyDataSets_Subset(batch_size_train=BATCH_SIZE)
     mydatasets_subset_4_9 = MyDataSets_Subset_4_9(batch_size_train=BATCH_SIZE)
@@ -102,8 +106,8 @@ with mlflow.start_run(run_name=RUN_SAVE_NAME):
     optimizer = torch.optim.AdamW(model.parameters(), lr=LR_RATE)
     # optimizer = torch.optim.SGD(model.parameters(), lr=LR_RATE)    #TODO If using SGD we need loss/batch_size
     # calc_loss = nn.BCELoss(reduction='sum')
-    # calc_loss = nn.L1Loss(reduction='sum')
-    calc_loss = nn.MSELoss(reduction='sum')
+    calc_loss = nn.L1Loss(reduction='sum')
+    # calc_loss = nn.MSELoss(reduction='sum')
     count_in_epoch = 0
     TRAIN_VAE = True
     if TRAIN_VAE:
@@ -116,7 +120,7 @@ with mlflow.start_run(run_name=RUN_SAVE_NAME):
                 x_reconstruction, mu, sigma = model(x)
 
                 reconstruction_loss = calc_loss(x, x_reconstruction)
-                kl_div = -0.5*torch.sum(1 + torch.log(sigma.pow(2)) - mu.pow(2) - sigma.pow(2))
+                kl_div = -0.5 * torch.sum(1 + torch.log(sigma.pow(2)) - mu.pow(2) - sigma.pow(2))
                 # reconstruction_loss /=BATCH_SIZE
                 # kl_div*=BATCH_SIZE
                 # kl_div += 1
@@ -125,10 +129,19 @@ with mlflow.start_run(run_name=RUN_SAVE_NAME):
                 loss.backward()
                 optimizer.step()
                 # print(f'{count_in_loop = }, {count_in_epoch = }')
-                loop.set_postfix(kl_div = kl_div.item(), reconstruction_loss=reconstruction_loss.item())
+                loop.set_postfix(kl_div=kl_div.item(), reconstruction_loss=reconstruction_loss.item(), loss=loss.item())
+            if loss < loss_last_min:
+                loss_last_min = loss
+                counter_no_change = 0
+            else:
+                if counter_no_change == 20:
+                    print('counter_no_change == 20 => break')
+                    break
+                if counter_no_change == 10:
+                    LR_RATE /= 10
+                    print('counter_no_change == 10 =>Changed LR_RATE /= 10')
+                counter_no_change += 1
 
-                count_in_loop+=1
-            count_in_epoch+=1
             if epoch % SHOW_SCATTER_EVERY == 0:
                 # show_scatter(mydataset=MYDATASET, current_epoch=str(epoch), model=model)
                 show_scatter(batch_from_dataloader_iter=mydatasets_subset_4_9.dataloader_test_subset_one_batch(),

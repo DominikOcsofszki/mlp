@@ -153,7 +153,7 @@ class MyDataSets_Subset_4_9:
 
         _train_idx = np.hstack(_train_idx_4 + _train_idx_9)
         self.train_loader_subset_changed_labels_size = _size_train = len(_train_idx)
-        print(f'{self.train_loader_subset_changed_labels_size = }')
+        # print(f'{self.train_loader_subset_changed_labels_size = }')
         _train_subset_changed_labels_to_0_1 = torch.utils.data.Subset(_trainset_full, _train_idx)
         self.train_loader_subset_changed_labels = torch.utils.data.DataLoader(_train_subset_changed_labels_to_0_1,
                                                                               shuffle=True,
@@ -175,11 +175,11 @@ class MyDataSets_Subset_4_9:
                                                                              shuffle=True,
                                                                              batch_size=self.test_loader_subset_changed_labels_size)
 
-        print(f'{self.train_loader_subset_changed_labels_size = }')
-        print(f'{self.train_loader_subset_changed_labels = }')
-
-        print(f'{self.test_loader_subset_changed_labels_size = }')
-        print(f'{self.test_loader_subset_changed_labels = }')
+        # print(f'{self.train_loader_subset_changed_labels_size = }')
+        # print(f'{self.train_loader_subset_changed_labels = }')
+        #
+        # print(f'{self.test_loader_subset_changed_labels_size = }')
+        # print(f'{self.test_loader_subset_changed_labels = }')
 
     def for_plotting_dataloader_test_full(self):
         return next(iter(self.test_loader_subset_changed_labels))
