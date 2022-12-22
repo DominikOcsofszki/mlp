@@ -16,6 +16,7 @@ import numpy as np
 import torch
 
 pick_model = model.VaeFinal_only_one_hidden()
+SHOW_COUNTERFACTUAL_EVERY=10
 
 ##############################################################################################################
 ##############################################################################################################
@@ -47,7 +48,6 @@ def issues_with_connecting(having_issues=False):
 
 ##############################################################################################################
 ##############################################################################################################
-SHOW_COUNTERFACTUAL_EVERY=1
 def print_counterfactuals(model, PRE_COUNTERFACTUAL_IMAGES):
     test_images_org_copy = PRE_COUNTERFACTUAL_IMAGES.clone()
     reconstructions = model(test_images_org_copy)[0]
@@ -89,7 +89,7 @@ def set_params(BATCH_SIZE: int = 128, EPOCHS: int = 100, LR_RATE=0.0001):
     return BATCH_SIZE, EPOCHS, LR_RATE
 
 
-def set_debug_params(TEST_AFTER_EPOCH=11, COUNT_PRINTS=11, SHOW_SCATTER_EVERY=10):
+def set_debug_params(TEST_AFTER_EPOCH=11, COUNT_PRINTS=11, SHOW_SCATTER_EVERY=1):
     return TEST_AFTER_EPOCH, COUNT_PRINTS, SHOW_SCATTER_EVERY
 
 
@@ -173,7 +173,7 @@ with mlflow.start_run(run_name=RUN_SAVE_NAME):
                 # reconstruction_loss /=BATCH_SIZE
                 # kl_div*=BATCH_SIZE
                 # kl_div += 1
-                loss = 1 * reconstruction_loss + 1 * kl_div  # TODO Could also change or add alpha,beta weighting!
+                loss = 1 * reconstruction_loss + 10 * kl_div  # TODO Could also change or add alpha,beta weighting!
                 LABEL_FACTOR = 10
                 ##TODO adding extra loss
                 if use_2_classifier:
