@@ -1,0 +1,15 @@
+artifact_uri: file:///Users/dominikocsofszki/PycharmProjects/mlp/mlruns/0/ffb400c9ba5742c2b22420a91e697153/artifacts
+end_time: 1671269673128
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: ffb400c9ba5742c2b22420a91e697153
+run_name: tasteful-crow-171
+run_uuid: ffb400c9ba5742c2b22420a91e697153
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1671269652887
+status: 3
+tags: []
+user_id: dominikocsofszki
