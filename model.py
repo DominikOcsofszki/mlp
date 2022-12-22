@@ -1867,7 +1867,7 @@ class VaeFinal_only_one_hidden(nn.Module):
 #         self.conv1 = nn.Conv2d(1,10,kernel_size=3)
 
 class VaeFinal_CNN(nn.Module):
-    def __init__(self, LATTENT_SPACE=2, CLASSES_USED=2):
+    def __init__(self, LATTENT_SPACE=2, CLASSES_USED=1):
         super().__init__()
         self.conv1 = nn.Conv2d(1, 100, kernel_size=3, stride=1, padding=1)
         self.conv2 = nn.Conv2d(100, 20, kernel_size=3, stride=1, padding=1)
@@ -1886,5 +1886,28 @@ class VaeFinal_CNN(nn.Module):
         x = self.fc2(x)
         x = self.softmax(x)
         # print(x)
-        x = torch.argmax(x,dim=1)
+        # x = torch.argmax(x,dim=1)
+        return x
+class MyModel5_retry(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.conv1 = nn.Conv2d(1, 100, kernel_size=3, stride=1, padding=1)
+        self.conv2 = nn.Conv2d(100, 20, kernel_size=3, stride=1, padding=1)
+        self.relu = nn.ReLU()
+        self.fc1 = nn.Linear(20 * 28 * 28, 20)
+        self.fc2 = nn.Linear(20, 10)
+
+    def forward(self, x):
+        # print(x.shape)
+        x = self.relu(self.conv1(x))
+        # print(x.shape)
+        x = self.relu(self.conv2(x))
+        # print(x.shape)
+        x = torch.flatten(x, 1)
+        # print(x.shape)
+        # print(x.shape)
+        x = self.fc1(x)
+        # print(x.shape)
+        x = self.fc2(x)
+        # print(x.shape)
         return x

@@ -48,7 +48,7 @@ def show_scatter(model, batch_from_dataloader_iter, current_epoch='epoch_informa
     # helper.
 
 
-def set_params(BATCH_SIZE: int = 2 ** 8, EPOCHS: int = 300, LR_RATE=3e-4):
+def set_params(BATCH_SIZE: int = 128, EPOCHS: int = 300, LR_RATE=3e-4):
     return BATCH_SIZE, EPOCHS, LR_RATE
 
 
