@@ -1899,7 +1899,144 @@ class MyModel5_retry(nn.Module):
         self.fc2 = nn.Linear(20, 10)
 
     def forward(self, x):
+        x = self.relu(self.conv1(x))
         # print(x.shape)
+        x = self.relu(self.conv2(x))
+        # print(x.shape)
+        x = torch.flatten(x, 1)
+        # print(x.shape)
+        # print(x.shape)
+        x = self.fc1(x)
+        # print(x.shape)
+        x = self.fc2(x)
+        # print(x.shape)
+        return x
+
+class MyModel5_retry_2classes(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.conv1 = nn.Conv2d(1, 100, kernel_size=3, stride=1, padding=1)
+        self.conv2 = nn.Conv2d(100, 20, kernel_size=3, stride=1, padding=1)
+        self.relu = nn.ReLU()
+        self.fc1 = nn.Linear(20 * 28 * 28, 20)
+        self.fc2 = nn.Linear(20, 2)
+
+    def forward(self, x):
+        x = self.relu(self.conv1(x))
+        # print(x.shape)
+        x = self.relu(self.conv2(x))
+        # print(x.shape)
+        x = torch.flatten(x, 1)
+        # print(x.shape)
+        # print(x.shape)
+        x = self.fc1(x)
+        # print(x.shape)
+        x = self.fc2(x)
+        # print(x.shape)
+        return x
+
+class MyModel5_retry_2classes_faster(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.conv1 = nn.Conv2d(1, 30, kernel_size=3, stride=1, padding=1)
+        self.conv2 = nn.Conv2d(30, 20, kernel_size=3, stride=1, padding=1)
+        self.relu = nn.ReLU()
+        self.fc1 = nn.Linear(20 * 28 * 28, 20)
+        self.fc2 = nn.Linear(20, 2)
+
+    def forward(self, x):
+        x = self.relu(self.conv1(x))
+        # print(x.shape)
+        x = self.relu(self.conv2(x))
+        # print(x.shape)
+        x = torch.flatten(x, 1)
+        # print(x.shape)
+        # print(x.shape)
+        x = self.fc1(x)
+        # print(x.shape)
+        x = self.fc2(x)
+        # print(x.shape)
+        return x
+
+class MyModel5_retry_2classes_faster_1(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.conv1 = nn.Conv2d(1, 20, kernel_size=3, stride=1, padding=1)
+        self.conv2 = nn.Conv2d(20, 20, kernel_size=3, stride=1, padding=1)
+        self.relu = nn.ReLU()
+        self.fc1 = nn.Linear(20 * 28 * 28, 20)
+        self.fc2 = nn.Linear(20, 2)
+
+    def forward(self, x):
+        x = self.relu(self.conv1(x))
+        # print(x.shape)
+        x = self.relu(self.conv2(x))
+        # print(x.shape)
+        x = torch.flatten(x, 1)
+        # print(x.shape)
+        # print(x.shape)
+        x = self.fc1(x)
+        # print(x.shape)
+        x = self.fc2(x)
+        # print(x.shape)
+        return x
+
+class MyModel5_retry_2classes_faster_2(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.conv1 = nn.Conv2d(1, 20, kernel_size=3, stride=1, padding=1)
+        self.conv2 = nn.Conv2d(20, 10, kernel_size=3, stride=1, padding=1)
+        self.relu = nn.ReLU()
+        self.fc1 = nn.Linear(10 * 28 * 28, 20)
+        self.fc2 = nn.Linear(20, 2)
+
+    def forward(self, x):
+        x = self.relu(self.conv1(x))
+        # print(x.shape)
+        x = self.relu(self.conv2(x))
+        # print(x.shape)
+        x = torch.flatten(x, 1)
+        # print(x.shape)
+        # print(x.shape)
+        x = self.fc1(x)
+        # print(x.shape)
+        x = self.fc2(x)
+        # print(x.shape)
+        return x
+
+class MyModel5_retry_2classes_faster_3(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.conv1 = nn.Conv2d(1, 15, kernel_size=3, stride=1, padding=1)
+        self.conv2 = nn.Conv2d(15, 10, kernel_size=3, stride=1, padding=1)
+        self.relu = nn.ReLU()
+        self.fc1 = nn.Linear(10 * 28 * 28, 20)
+        self.fc2 = nn.Linear(20, 2)
+
+    def forward(self, x):
+        x = self.relu(self.conv1(x))
+        # print(x.shape)
+        x = self.relu(self.conv2(x))
+        # print(x.shape)
+        x = torch.flatten(x, 1)
+        # print(x.shape)
+        # print(x.shape)
+        x = self.fc1(x)
+        # print(x.shape)
+        x = self.fc2(x)
+        # print(x.shape)
+        return x
+
+class MyModel5_retry_2classes_faster_4(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.conv1 = nn.Conv2d(1, 10, kernel_size=3, stride=1, padding=1)
+        self.conv2 = nn.Conv2d(10, 10, kernel_size=3, stride=1, padding=1)
+        self.relu = nn.ReLU()
+        self.fc1 = nn.Linear(10 * 28 * 28, 20)
+        self.fc2 = nn.Linear(20, 2)
+
+    def forward(self, x):
         x = self.relu(self.conv1(x))
         # print(x.shape)
         x = self.relu(self.conv2(x))

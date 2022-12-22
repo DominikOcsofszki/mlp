@@ -49,11 +49,11 @@ def show_scatter(model, batch_from_dataloader_iter, current_epoch='epoch_informa
     # helper.
 
 
-def set_params(BATCH_SIZE: int = 128, EPOCHS: int = 300, LR_RATE=0.0001):
+def set_params(BATCH_SIZE: int = 128, EPOCHS: int = 10, LR_RATE=0.0001):
     return BATCH_SIZE, EPOCHS, LR_RATE
 
 
-def set_debug_params(TEST_AFTER_EPOCH=11, COUNT_PRINTS=11, SHOW_SCATTER_EVERY=10):
+def set_debug_params(TEST_AFTER_EPOCH=11, COUNT_PRINTS=11, SHOW_SCATTER_EVERY=1):
     return TEST_AFTER_EPOCH, COUNT_PRINTS, SHOW_SCATTER_EVERY
 
 
@@ -86,32 +86,35 @@ TEST_AFTER_EPOCH, COUNT_PRINTS, SHOW_SCATTER_EVERY = set_debug_params()
 issues_with_connecting(having_issues=False)
 RUN_SAVE_NAME = pick_model.__class__.__name__ + str('')
 
+use_2_classifier = True
 counter_no_change = 0
 loss_last_min = 999_999
 with mlflow.start_run(run_name=RUN_SAVE_NAME):
-    # MyDataSets_Subset = MyDataSets_Subset(batch_size_train=BATCH_SIZE)
+    if use_2_classifier:
+        ###ADDING 2. Classifier
+        pick_2_classifier = model.MyModel5_retry_2classes_faster_4()
+        # pick_2_classifier = model.MyModel5_retry_2classes_faster()
+        model2_classifier = helper.import_model_name(model_x=pick_2_classifier, activate_eval=True)
+        model2_classifier.eval()
+        # calc_loss_reconstruction_labeling = nn.BCELoss(reduction='sum')
+        calc_loss_reconstruction_labeling = nn.CrossEntropyLoss(reduction='sum')
+        print(f'{calc_loss_reconstruction_labeling = }')
+
     mydatasets_subset_4_9 = MyDataSets_Subset_4_9(batch_size_train=BATCH_SIZE)
     pick_device = 'cpu'
     DEVICE = torch.device(pick_device)  # alternative 'mps' - but no speedup...
     model = pick_model.to(DEVICE)
     mlflow_start_log_first(EPOCHS, LR_RATE, BATCH_SIZE, pick_device, model)
 
-    # trainloader = MyDataSets_Subset.dataloader_train_subset()
-    # testloader = MyDataSets_Subset.dataloader_test_subset_one_batch()
-
     trainloader = mydatasets_subset_4_9.dataloader_train_subset()
     testloader = mydatasets_subset_4_9.dataloader_test_subset()
-    # testloader = MyDataSets_Subset_4_9.dataloader_test_subset_one_batch()
 
     # optimizer = torch.optim.AdamW(model.parameters(), lr=LR_RATE)
     optimizer = torch.optim.Adam(model.parameters(), lr=LR_RATE)
-    # optimizer = torch.optim.SGD(model.parameters(), lr=LR_RATE,momentum=0.9)    #TODO If using SGD we need loss/batch_size
+    # optimizer = torch.optim.SGD(model.parameters(), lr=LR_RATE)    #TODO If using SGD we need loss/batch_size
     # calc_loss = nn.BCELoss(reduction='sum')
-    # calc_loss = nn.L1Loss(reduction='sum')
-    calc_loss = nn.CrossEntropyLoss()
-
+    calc_loss = nn.L1Loss(reduction='sum')
     # calc_loss = nn.MSELoss(reduction='sum')
-    calc_loss_reconstruction_labeling = nn.BCELoss(reduction='sum')
     count_in_epoch = 0
     TRAIN_VAE = True
     if TRAIN_VAE:
@@ -119,9 +122,29 @@ with mlflow.start_run(run_name=RUN_SAVE_NAME):
             count_in_loop = 0
             loop = tqdm(enumerate(trainloader))
 
-            for i, (x, _) in loop:
+            for i, (x, y) in loop:
                 x = x.to(DEVICE).view(x.shape[0], 28 * 28)
                 x_reconstruction, mu, sigma = model(x)
+
+                # print(f'{x_reconstruction=}')
+                # print(f'{x_reconstruction.shape=}')
+
+                # print(labeling_reconstruction_loss)
+                if use_2_classifier:
+                    x_rec_formated28_28 = x_reconstruction.reshape(x_reconstruction.shape[0], 1, 28, 28)
+                    # print(x_rec_formated28_28.shape)
+                    x_reconstruction_labeled = model2_classifier(x_rec_formated28_28)
+                    # print(f'{x_reconstruction_labeled = }')
+                    # print(f'{x_reconstruction_labeled.shape = }')
+                    # print(f'{y = }')
+                    # print(f'{y.shape = }')
+                    # argmaxx = x_reconstruction_labeled.argmax(dim=1)
+                    # print(f'{argmaxx = }')
+                    # labeling_reconstruction_loss = calc_loss_reconstruction_labeling(argmaxx, y)
+                    reconst_label_loss = calc_loss_reconstruction_labeling(x_reconstruction_labeled, y)
+                    # print(f'{labeling_reconstruction_loss = }')
+                    # print(f'{x_reconstruction=}')
+                    # print(f'{x_reconstruction.shape=}')
 
                 reconstruction_loss = calc_loss(x, x_reconstruction)
                 kl_div = -0.5 * torch.sum(1 + torch.log(sigma.pow(2)) - mu.pow(2) - sigma.pow(2))
@@ -129,11 +152,20 @@ with mlflow.start_run(run_name=RUN_SAVE_NAME):
                 # kl_div*=BATCH_SIZE
                 # kl_div += 1
                 loss = 1 * reconstruction_loss + 1 * kl_div  # TODO Could also change or add alpha,beta weighting!
+                LABEL_FACTOR = 1
+                ##TODO adding extra loss
+                if use_2_classifier:
+
+                    loss = loss + LABEL_FACTOR * reconst_label_loss
+
                 optimizer.zero_grad()
                 loss.backward()
                 optimizer.step()
                 # print(f'{count_in_loop = }, {count_in_epoch = }')
-                loop.set_postfix(kl_div=kl_div.item(), reconstruction_loss=reconstruction_loss.item(), loss=loss.item())
+                loop.set_postfix(kl_div=kl_div.item(), reconstruction_loss=reconstruction_loss.item(),
+                                 loss=loss.item(), reconst_label_loss=reconst_label_loss.item())
+            show_scatter(batch_from_dataloader_iter=mydatasets_subset_4_9.dataloader_test_subset_one_batch(),
+                         current_epoch=str(epoch) + ' l,h1,h2: ' + str(set_model_params()), model=model)
             if loss < loss_last_min:
                 loss_last_min = loss
                 counter_no_change = 0
@@ -184,13 +216,13 @@ with mlflow.start_run(run_name=RUN_SAVE_NAME):
     print(f'{PATH}')
     torch.save(model.state_dict(), PATH)
 
-
-######### ADDED FOR CHECKING RECONSTRUCTION, after finishing
+    ######### ADDED FOR CHECKING RECONSTRUCTION, after finishing
     from torchvision.utils import make_grid
     from MyDataSet import MyDataSets_Subset_4_9
     from matplotlib import pyplot as plt
     import numpy as np
     import torch
+
     # Display original images
     # mydatasets_subset_4_9 = MyDataSets_Subset_4_9(batch_size_train=10000)
 
@@ -208,13 +240,11 @@ with mlflow.start_run(run_name=RUN_SAVE_NAME):
         plt.show()
 
     # Display reconstructed images
-    import helper  # model_loaded = model.VaeMe_500_hidden()
-    import model
-    import torch
-    pick_model = model.Vae_var_fix_norm()
-    pick_model = helper.import_model_name(model_x=pick_model, activate_eval=True)
+
+    # pick_model = model.Vae_var_fix_norm()
+    # pick_model = helper.import_model_name(model_x=pick_model, activate_eval=True)
     # print(test_images_org.shape)
-    reconstructions = pick_model(test_images_org)[0]
+    reconstructions = model(test_images_org)[0]
     # print(reconstructions)
     with torch.no_grad():
         print("Reconstructions")

@@ -18,12 +18,12 @@ from tqdm import tqdm
 TEST_ONLY_LAST = True
 TEST_AFTER_EPOCH = 11
 COUNT_PRINTS = 5
-EPOCHS = 1
+EPOCHS = 10
 
 #
 LR_RATE = 3e-4
 # pick_model = model.VaeMe_200_hidden()
-pick_model = model.MyModel5_retry_2classes()
+pick_model = model.MyModel5_retry_2classes_faster_4()
 ADD_TEXT = ''
 RUN_SAVE_NAME = pick_model.__class__.__name__ + str(ADD_TEXT)
 print(f'{RUN_SAVE_NAME = }')
@@ -67,8 +67,13 @@ with mlflow.start_run(run_name=RUN_SAVE_NAME):
     # Filter for only two classes #TODO Not sure yet if it is needed
 
     # Trainloader
-    trainloader = torch.utils.data.DataLoader(trainset, batch_size=BATCH_SIZE)  # No shuffle for reproducibility
-    testsetloader = torch.utils.data.DataLoader(testset, batch_size=BATCH_SIZE)
+    # trainloader = torch.utils.data.DataLoader(trainset, batch_size=BATCH_SIZE)  # No shuffle for reproducibility
+    # testsetloader = torch.utils.data.DataLoader(testset, batch_size=BATCH_SIZE)
+    from MyDataSet import MyDataSets_Subset, MyDataSets, MyDataSets_Subset_4_9
+
+    mydatasets_subset_4_9 = MyDataSets_Subset_4_9()
+    trainloader = mydatasets_subset_4_9.dataloader_train_subset()
+    testsetloader = mydatasets_subset_4_9.dataloader_test_subset()
 
     # Loss function and optimizer
     if HAS_LOSS_FUNCTION:
