@@ -9,6 +9,11 @@ import MyDataSet
 import helper
 import model
 from MyDataSet import MyDataSets_Subset, MyDataSets, MyDataSets_Subset_4_9
+from torchvision.utils import make_grid
+from MyDataSet import MyDataSets_Subset_4_9
+from matplotlib import pyplot as plt
+import numpy as np
+import torch
 
 pick_model = model.VaeFinal_only_one_hidden()
 
@@ -42,6 +47,37 @@ def issues_with_connecting(having_issues=False):
 
 ##############################################################################################################
 ##############################################################################################################
+SHOW_COUNTERFACTUAL_EVERY=100
+def print_counterfactuals(model, PRE_COUNTERFACTUAL_IMAGES):
+    test_images_org_copy = PRE_COUNTERFACTUAL_IMAGES.clone()
+    reconstructions = model(test_images_org_copy)[0]
+    with torch.no_grad():
+        print("Reconstructions")
+        reconstructions = reconstructions.view(reconstructions.size(0), 1, 28, 28)
+        reconstructions = reconstructions.cpu()
+        reconstructions = reconstructions.clamp(0, 1)
+        reconstructions = reconstructions[:50]
+        plt.imshow(np.transpose(make_grid(reconstructions, 10, 5).numpy(), (1, 2, 0)))
+        plt.show()
+def print_some_elements_return_them(model):
+    test_images_org, _ = mydatasets_subset_4_9.dataloader_test_subset_one_batch()
+    test_images_copy = test_images_org.clone()
+    with torch.no_grad():
+        print("Original Images")
+        test_images = test_images_copy.cpu()
+        test_images = test_images.clamp(0, 1)
+        test_images = test_images[:50]
+        test_images = make_grid(test_images, 10, 5)
+        test_images = test_images.numpy()
+        test_images = np.transpose(test_images, (1, 2, 0))
+        plt.imshow(test_images)
+        plt.show()
+        return test_images_copy
+        # print_counterfactuals(model=model, test_images_org=test_images_org)
+
+
+
+
 def show_scatter(model, batch_from_dataloader_iter, current_epoch='epoch_information'):
     # helper.show_scatter_binary_dataset(model=model, mydataset_subset=mydataset, current_epoch=current_epoch)
     helper.show_scatter_with_batch_from_iter(model=model, batch_from_dataloader_iter=batch_from_dataloader_iter,
@@ -49,7 +85,7 @@ def show_scatter(model, batch_from_dataloader_iter, current_epoch='epoch_informa
     # helper.
 
 
-def set_params(BATCH_SIZE: int = 128, EPOCHS: int = 10, LR_RATE=0.0001):
+def set_params(BATCH_SIZE: int = 128, EPOCHS: int = 100, LR_RATE=0.0001):
     return BATCH_SIZE, EPOCHS, LR_RATE
 
 
@@ -108,6 +144,7 @@ with mlflow.start_run(run_name=RUN_SAVE_NAME):
 
     trainloader = mydatasets_subset_4_9.dataloader_train_subset()
     testloader = mydatasets_subset_4_9.dataloader_test_subset()
+    PRE_COUNTERFACTUAL_IMAGES = print_some_elements_return_them(model=model)
 
     # optimizer = torch.optim.AdamW(model.parameters(), lr=LR_RATE)
     optimizer = torch.optim.Adam(model.parameters(), lr=LR_RATE)
@@ -123,28 +160,13 @@ with mlflow.start_run(run_name=RUN_SAVE_NAME):
             loop = tqdm(enumerate(trainloader))
 
             for i, (x, y) in loop:
+                # print(f'{y = }')
                 x = x.to(DEVICE).view(x.shape[0], 28 * 28)
                 x_reconstruction, mu, sigma = model(x)
-
-                # print(f'{x_reconstruction=}')
-                # print(f'{x_reconstruction.shape=}')
-
-                # print(labeling_reconstruction_loss)
                 if use_2_classifier:
                     x_rec_formated28_28 = x_reconstruction.reshape(x_reconstruction.shape[0], 1, 28, 28)
-                    # print(x_rec_formated28_28.shape)
                     x_reconstruction_labeled = model2_classifier(x_rec_formated28_28)
-                    # print(f'{x_reconstruction_labeled = }')
-                    # print(f'{x_reconstruction_labeled.shape = }')
-                    # print(f'{y = }')
-                    # print(f'{y.shape = }')
-                    # argmaxx = x_reconstruction_labeled.argmax(dim=1)
-                    # print(f'{argmaxx = }')
-                    # labeling_reconstruction_loss = calc_loss_reconstruction_labeling(argmaxx, y)
                     reconst_label_loss = calc_loss_reconstruction_labeling(x_reconstruction_labeled, y)
-                    # print(f'{labeling_reconstruction_loss = }')
-                    # print(f'{x_reconstruction=}')
-                    # print(f'{x_reconstruction.shape=}')
 
                 reconstruction_loss = calc_loss(x, x_reconstruction)
                 kl_div = -0.5 * torch.sum(1 + torch.log(sigma.pow(2)) - mu.pow(2) - sigma.pow(2))
@@ -152,10 +174,9 @@ with mlflow.start_run(run_name=RUN_SAVE_NAME):
                 # kl_div*=BATCH_SIZE
                 # kl_div += 1
                 loss = 1 * reconstruction_loss + 1 * kl_div  # TODO Could also change or add alpha,beta weighting!
-                LABEL_FACTOR = 1
+                LABEL_FACTOR = 100
                 ##TODO adding extra loss
                 if use_2_classifier:
-
                     loss = loss + LABEL_FACTOR * reconst_label_loss
 
                 optimizer.zero_grad()
@@ -164,8 +185,8 @@ with mlflow.start_run(run_name=RUN_SAVE_NAME):
                 # print(f'{count_in_loop = }, {count_in_epoch = }')
                 loop.set_postfix(kl_div=kl_div.item(), reconstruction_loss=reconstruction_loss.item(),
                                  loss=loss.item(), reconst_label_loss=reconst_label_loss.item())
-            show_scatter(batch_from_dataloader_iter=mydatasets_subset_4_9.dataloader_test_subset_one_batch(),
-                         current_epoch=str(epoch) + ' l,h1,h2: ' + str(set_model_params()), model=model)
+            # show_scatter(batch_from_dataloader_iter=mydatasets_subset_4_9.dataloader_test_subset_one_batch(),
+            #              current_epoch=str(epoch) + ' l,h1,h2: ' + str(set_model_params()), model=model)
             if loss < loss_last_min:
                 loss_last_min = loss
                 counter_no_change = 0
@@ -181,7 +202,11 @@ with mlflow.start_run(run_name=RUN_SAVE_NAME):
             if epoch % SHOW_SCATTER_EVERY == 0:
                 # show_scatter(mydataset=MYDATASET, current_epoch=str(epoch), model=model)
                 show_scatter(batch_from_dataloader_iter=mydatasets_subset_4_9.dataloader_test_subset_one_batch(),
-                             current_epoch=str(epoch) + ' l,h1,h2: ' + str(set_model_params()), model=model)
+                             current_epoch=str(epoch) + '  l,h1: ' + str(set_model_params()), model=model)
+            if epoch % SHOW_COUNTERFACTUAL_EVERY == 0:
+                # print_some_elements_return_them(model=model)
+                print_counterfactuals(model=model,PRE_COUNTERFACTUAL_IMAGES=PRE_COUNTERFACTUAL_IMAGES)
+
     else:
         optimizer = torch.optim.Adam(model.parameters(), lr=LR_RATE)
         # optimizer = torch.optim.SGD(model.parameters(), lr=LR_RATE)    #TODO If using SGD we need loss/batch_size
@@ -208,6 +233,7 @@ with mlflow.start_run(run_name=RUN_SAVE_NAME):
                 loop.set_postfix(loss=loss.item())
 
     print('finish!!!')
+    print_counterfactuals(model=model, PRE_COUNTERFACTUAL_IMAGES=PRE_COUNTERFACTUAL_IMAGES)
 
     SAVE_NAME_MODEL = RUN_SAVE_NAME + '_weights'
     PATH = '/Users/dominikocsofszki/PycharmProjects/mlp/data/weights/' + SAVE_NAME_MODEL
@@ -216,41 +242,3 @@ with mlflow.start_run(run_name=RUN_SAVE_NAME):
     print(f'{PATH}')
     torch.save(model.state_dict(), PATH)
 
-    ######### ADDED FOR CHECKING RECONSTRUCTION, after finishing
-    from torchvision.utils import make_grid
-    from MyDataSet import MyDataSets_Subset_4_9
-    from matplotlib import pyplot as plt
-    import numpy as np
-    import torch
-
-    # Display original images
-    # mydatasets_subset_4_9 = MyDataSets_Subset_4_9(batch_size_train=10000)
-
-    test_images_org, _ = mydatasets_subset_4_9.dataloader_test_subset_one_batch()
-    test_images_copy = test_images_org.clone()
-    with torch.no_grad():
-        print("Original Images")
-        test_images = test_images_copy.cpu()
-        test_images = test_images.clamp(0, 1)
-        test_images = test_images[:50]
-        test_images = make_grid(test_images, 10, 5)
-        test_images = test_images.numpy()
-        test_images = np.transpose(test_images, (1, 2, 0))
-        plt.imshow(test_images)
-        plt.show()
-
-    # Display reconstructed images
-
-    # pick_model = model.Vae_var_fix_norm()
-    # pick_model = helper.import_model_name(model_x=pick_model, activate_eval=True)
-    # print(test_images_org.shape)
-    reconstructions = model(test_images_org)[0]
-    # print(reconstructions)
-    with torch.no_grad():
-        print("Reconstructions")
-        reconstructions = reconstructions.view(reconstructions.size(0), 1, 28, 28)
-        reconstructions = reconstructions.cpu()
-        reconstructions = reconstructions.clamp(0, 1)
-        reconstructions = reconstructions[:50]
-        plt.imshow(np.transpose(make_grid(reconstructions, 10, 5).numpy(), (1, 2, 0)))
-        plt.show()
