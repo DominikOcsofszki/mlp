@@ -1418,6 +1418,7 @@ class Vae_500h_2l_sigma(nn.Module):
         z = mu + sigma * eps
         return z
 
+
 class Vae_500h_2l_sigma_new_loss(nn.Module):
     def __init__(self, hidden_units=500, latent=2):  # From paper hidden_units = 500 /
         super().__init__()  # no overiffiting of superflouse latent variables,
@@ -1459,13 +1460,14 @@ class Vae_500h_2l_sigma_new_loss(nn.Module):
         eps = torch.randn_like(sigma)  # == torch.randn_like(mu) == torch.randn_like(sigma)
         z = mu + sigma * eps
         x = self.decode(z)
-        return x,mu,sigma
+        return x, mu, sigma
 
     def forward_return_z(self, x):
         mu, sigma = self.encode(x)
         eps = torch.randn_like(sigma)  # == torch.randn_like(mu) == torch.randn_like(sigma)
         z = mu + sigma * eps
         return z
+
 
 class Vae_h500_l2(nn.Module):
     def __init__(self, hidden_units=500, latent=2):  # From paper hidden_units = 500 /
@@ -1508,13 +1510,14 @@ class Vae_h500_l2(nn.Module):
         eps = torch.randn_like(sigma)  # == torch.randn_like(mu) == torch.randn_like(sigma)
         z = mu + sigma * eps
         x = self.decode(z)
-        return x,mu,sigma
+        return x, mu, sigma
 
     def forward_return_z(self, x):
         mu, sigma = self.encode(x)
         eps = torch.randn_like(sigma)  # == torch.randn_like(mu) == torch.randn_like(sigma)
         z = mu + sigma * eps
         return z
+
 
 class Vae_h200_l2(nn.Module):
     def __init__(self, hidden_units=200, latent=2):  # From paper hidden_units = 500 /
@@ -1557,13 +1560,14 @@ class Vae_h200_l2(nn.Module):
         eps = torch.randn_like(sigma)  # == torch.randn_like(mu) == torch.randn_like(sigma)
         z = mu + sigma * eps
         x = self.decode(z)
-        return x,mu,sigma
+        return x, mu, sigma
 
     def forward_return_z(self, x):
         mu, sigma = self.encode(x)
         eps = torch.randn_like(sigma)  # == torch.randn_like(mu) == torch.randn_like(sigma)
         z = mu + sigma * eps
         return z
+
 
 class Vae_var(nn.Module):
     def __init__(self, hidden_units=1500, latent=2):  # From paper hidden_units = 500 /
@@ -1606,7 +1610,8 @@ class Vae_var(nn.Module):
         eps = torch.randn_like(sigma)  # == torch.randn_like(mu) == torch.randn_like(sigma)
         z = mu + sigma * eps
         x = self.decode(z)
-        return x,mu,sigma
+        return x, mu, sigma
+
     def calc_z(self, mu, sigma):
         # mu, sigma = self.encode(x)
         eps = torch.randn_like(sigma)  # == torch.randn_like(mu) == torch.randn_like(sigma)
@@ -1614,8 +1619,9 @@ class Vae_var(nn.Module):
         # x = self.decode(z)
         return z
 
+
 class Vae_var_add_layer_out_put_to_high_to_normalize(nn.Module):
-    def __init__(self, hidden_units=500, latent=2,hidden2 = 200):  # From paper hidden_units = 500 /
+    def __init__(self, hidden_units=500, latent=2, hidden2=200):  # From paper hidden_units = 500 /
         super().__init__()  # no overiffiting of superflouse latent variables,
         self.flatten = nn.Flatten(start_dim=1)
         # encode:
@@ -1626,7 +1632,7 @@ class Vae_var_add_layer_out_put_to_high_to_normalize(nn.Module):
         self.hidden2_to_sigma = nn.Linear(hidden2, latent)
         # decode
         self.latent_to_hidden = nn.Linear(latent, hidden_units)
-        self.hidden_to_hidden2 = nn.Linear(hidden_units,hidden2)
+        self.hidden_to_hidden2 = nn.Linear(hidden_units, hidden2)
 
         self.hidden2_to_rec_img = nn.Linear(hidden2, 28 * 28)
         self.relu = nn.ReLU()
@@ -1657,7 +1663,8 @@ class Vae_var_add_layer_out_put_to_high_to_normalize(nn.Module):
         eps = torch.randn_like(sigma)  # == torch.randn_like(mu) == torch.randn_like(sigma)
         z = mu + sigma * eps
         x = self.decode(z)
-        return x,mu,sigma
+        return x, mu, sigma
+
     def calc_z(self, mu, sigma):
         # mu, sigma = self.encode(x)
         eps = torch.randn_like(sigma)  # == torch.randn_like(mu) == torch.randn_like(sigma)
@@ -1665,8 +1672,9 @@ class Vae_var_add_layer_out_put_to_high_to_normalize(nn.Module):
         # x = self.decode(z)
         return z
 
+
 class Vae_var_fix_norm(nn.Module):
-    def __init__(self, hidden_units=250, latent=2,hidden2 = 250):  # From paper hidden_units = 500 /
+    def __init__(self, hidden_units=250, latent=2, hidden2=250):  # From paper hidden_units = 500 /
         super().__init__()  # no overiffiting of superflouse latent variables,
         self.flatten = nn.Flatten(start_dim=1)
         # encode:
@@ -1676,7 +1684,7 @@ class Vae_var_fix_norm(nn.Module):
         self.hidden2_to_sigma = nn.Linear(hidden2, latent)
         # decode
         self.latent_to_hidden = nn.Linear(latent, hidden_units)
-        self.hidden_to_hidden2 = nn.Linear(hidden_units,hidden2)
+        self.hidden_to_hidden2 = nn.Linear(hidden_units, hidden2)
 
         self.hidden2_to_rec_img = nn.Linear(hidden2, 28 * 28)
         self.relu = nn.ReLU()
@@ -1705,7 +1713,7 @@ class Vae_var_fix_norm(nn.Module):
         z = mu + sigma * eps
         z = self.sigmoid(z)
         x = self.decode(z)
-        return x,mu,sigma
+        return x, mu, sigma
     # def calc_z(self, mu, sigma):
     #     # mu, sigma = self.encode(x)
     #     eps = torch.randn_like(sigma)  # == torch.randn_like(mu) == torch.randn_like(sigma)
@@ -1713,8 +1721,9 @@ class Vae_var_fix_norm(nn.Module):
     #     # x = self.decode(z)
     #     return z
 
+
 class Vae_var_28_28(nn.Module):
-    def __init__(self, hidden_units=500, latent=2,hidden2 = 500):  # From paper hidden_units = 500 /
+    def __init__(self, hidden_units=500, latent=2, hidden2=500):  # From paper hidden_units = 500 /
         super().__init__()  # no overiffiting of superflouse latent variables,
         self.flatten = nn.Flatten(start_dim=1)
         # encode:
@@ -1724,7 +1733,7 @@ class Vae_var_28_28(nn.Module):
         self.hidden2_to_sigma = nn.Linear(hidden2, latent)
         # decode
         self.latent_to_hidden = nn.Linear(latent, hidden_units)
-        self.hidden_to_hidden2 = nn.Linear(hidden_units,hidden2)
+        self.hidden_to_hidden2 = nn.Linear(hidden_units, hidden2)
 
         self.hidden2_to_rec_img = nn.Linear(hidden2, 28 * 28)
         self.relu = nn.ReLU()
@@ -1753,25 +1762,35 @@ class Vae_var_28_28(nn.Module):
         z = mu + sigma * eps
         z = self.sigmoid(z)
         x = self.decode(z)
-        return x,mu,sigma
+        return x, mu, sigma
+
 
 class VaeFinal(nn.Module):
-    def __init__(self, LATTENT_SPACE=2, HIDDEN_1_LAYER=500, HIDDEN_2_LAYER=500):  # From paper hidden_units = 500 /
+    def __init__(self, LATTENT_SPACE=2, HIDDEN_1_LAYER=500, HIDDEN_2_LAYER=500,
+                 LAYER_2_AS_IDENTITY=False):  # From paper hidden_units = 500 /
         super().__init__()  # no overiffiting of superflouse latent variables,
         self.flatten = nn.Flatten(start_dim=1)
         # encode:
         self.img_to_hiden = nn.Linear(28 * 28, HIDDEN_1_LAYER)
-        self.hidden_to_hidden2 = nn.Linear(HIDDEN_1_LAYER, HIDDEN_2_LAYER)
+        if LAYER_2_AS_IDENTITY:
+            self.hidden_to_hidden2 = nn.Identity()
+            HIDDEN_2_LAYER = HIDDEN_1_LAYER
+        else:
+            self.hidden_to_hidden2 = nn.Linear(HIDDEN_1_LAYER, HIDDEN_2_LAYER)
+
         self.hidden2_to_mu = nn.Linear(HIDDEN_2_LAYER, LATTENT_SPACE)
         self.hidden2_to_sigma = nn.Linear(HIDDEN_2_LAYER, LATTENT_SPACE)
         # lattent = z = mu + sigma *rand(sigma.size)
         # decode
-        self.latent_to_hidden = nn.Linear(LATTENT_SPACE, HIDDEN_1_LAYER)
-        self.hidden_to_hidden2 = nn.Linear(HIDDEN_1_LAYER, HIDDEN_2_LAYER)
+        self.latent_to_hidden = nn.Linear(LATTENT_SPACE, HIDDEN_2_LAYER)
+        if LAYER_2_AS_IDENTITY:
+            self.hidden2_to_hidden1 = nn.Identity()
+        else:
+            self.hidden2_to_hidden1 = nn.Linear(HIDDEN_2_LAYER, HIDDEN_1_LAYER)
 
-        self.hidden2_to_rec_img = nn.Linear(HIDDEN_2_LAYER, 28 * 28)
-        # self.activation = nn.ReLU()
-        self.activation = nn.ELU()
+        self.hidden1_to_rec_img = nn.Linear(HIDDEN_1_LAYER, 28 * 28)
+        self.activation = nn.ReLU()
+        # self.activation = nn.ELU()
         # self.sigmoid = nn.Sigmoid()
         self.sigmoid = nn.Sigmoid()
         # self.relu = nn.
@@ -1786,8 +1805,8 @@ class VaeFinal(nn.Module):
 
     def decode(self, z):
         z = self.activation(self.latent_to_hidden(z))
-        z = self.activation(self.hidden_to_hidden2(z))
-        z = self.sigmoid(self.hidden2_to_rec_img(z))
+        z = self.activation(self.hidden2_to_hidden1(z))
+        z = self.sigmoid(self.hidden1_to_rec_img(z))
 
         return z
 
@@ -1797,4 +1816,75 @@ class VaeFinal(nn.Module):
         z = mu + sigma * eps
         z = self.sigmoid(z)
         x = self.decode(z)
-        return x,mu,sigma
+        return x, mu, sigma
+
+
+class VaeFinal_only_one_hidden(nn.Module):
+    def __init__(self, LATTENT_SPACE=2, HIDDEN_1_LAYER=500):  # From paper hidden_units = 500 /
+        super().__init__()  # no overiffiting of superflouse latent variables,
+        self.flatten = nn.Flatten(start_dim=1)
+        self.img_to_hidden = nn.Linear(28 * 28, HIDDEN_1_LAYER)
+
+        self.hidden_to_mu = nn.Linear(HIDDEN_1_LAYER, LATTENT_SPACE)
+        self.hidden_to_sigma = nn.Linear(HIDDEN_1_LAYER, LATTENT_SPACE)
+
+        self.latent_to_hidden = nn.Linear(LATTENT_SPACE, HIDDEN_1_LAYER)
+        self.hidden_to_rec_img = nn.Linear(HIDDEN_1_LAYER, 28 * 28)
+        self.activation = nn.ReLU()
+        self.sigmoid = nn.Sigmoid()
+
+    def encode(self, x):
+        x = self.flatten(x)
+        x = self.activation(self.img_to_hidden(x))
+
+        # mu = self.sigmoid(self.hidden_to_mu(x))   #TODO normalize to -4 and 4 but not 0,1!
+        # sigma = self.sigmoid(self.hidden_to_sigma(x))
+        mu = (self.hidden_to_mu(x))  # TODO normalize to -4 and 4 but not 0,1!
+        sigma = (self.hidden_to_sigma(x))
+        return mu, sigma
+
+    def decode(self, z):
+        z = self.activation(self.latent_to_hidden(z))
+        # z = self.sigmoid(self.hidden_to_rec_img(z))# TODO normalize to -4 and 4 but not 0,1!
+        z = (self.hidden_to_rec_img(z))
+
+        return z
+
+    def forward(self, x):
+        mu, sigma = self.encode(x)
+        eps = torch.randn_like(sigma)  # == torch.randn_like(mu) == torch.randn_like(sigma)
+        z = mu + sigma * eps
+        # z = self.sigmoid(z)# TODO normalize to -4 and 4 but not 0,1!
+        # z = self.sigmoid(z)# TODO normalize to -4 and 4 but not 0,1!
+        x = self.decode(z)
+        return x, mu, sigma
+
+
+# class VaeFinal_CNN(nn.Module):
+#     def __init__(self,LATTENT_SPACE=2):
+#         super().__init__()
+#         self.INPUT = 28*28
+#         self.conv1 = nn.Conv2d(1,10,kernel_size=3)
+
+class VaeFinal_CNN(nn.Module):
+    def __init__(self, LATTENT_SPACE=2, CLASSES_USED=2):
+        super().__init__()
+        self.conv1 = nn.Conv2d(1, 100, kernel_size=3, stride=1, padding=1)
+        self.conv2 = nn.Conv2d(100, 20, kernel_size=3, stride=1, padding=1)
+        self.relu = nn.ReLU()
+        self.fc1 = nn.Linear(20 * 28 * 28, 20)
+        self.fc2 = nn.Linear(20, CLASSES_USED)
+        self.flatten = nn.Flatten(start_dim=1)
+        self.softmax = nn.Softmax(dim=1)
+        self.logsoftmax = nn.LogSoftmax()
+
+    def forward(self, x):
+        x = self.relu(self.conv1(x))
+        x = self.relu(self.conv2(x))
+        x = self.flatten(x)
+        x = self.fc1(x)
+        x = self.fc2(x)
+        x = self.softmax(x)
+        # print(x)
+        x = torch.argmax(x,dim=1)
+        return x
