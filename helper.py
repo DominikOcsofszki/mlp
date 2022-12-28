@@ -99,6 +99,14 @@ def import_model_name(model_x: nn.Module, activate_eval=True):
     if activate_eval: model_x.eval()
     # print(f'{save_name_model} imported')
     return model_x
+def import_model_name_weights_copy(model_x: nn.Module, activate_eval=True):
+    model_name = model_x._get_name()
+    save_name_model = model_name + '_weights'
+    PATH = '/Users/dominikocsofszki/PycharmProjects/mlp/data/weights_copy/' + save_name_model
+    model_x.load_state_dict(torch.load(PATH))
+    if activate_eval: model_x.eval()
+    # print(f'{save_name_model} imported')
+    return model_x
 
 
 def return_images_labels(count_of_images=5, training_set=False):

@@ -172,7 +172,7 @@ class MyDataSets_Subset_4_9:
         self.test_loader_subset_changed_labels_size = len(_test_idx)
         _test_subset_changed_labels_to_0_1 = torch.utils.data.Subset(_testset_full, _test_idx)
         self.test_loader_subset_changed_labels = torch.utils.data.DataLoader(_test_subset_changed_labels_to_0_1,
-                                                                             shuffle=True,
+                                                                             shuffle=False,
                                                                              batch_size=self.test_loader_subset_changed_labels_size)
 
         # print(f'{self.train_loader_subset_changed_labels_size = }')

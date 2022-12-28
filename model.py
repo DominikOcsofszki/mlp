@@ -1860,7 +1860,46 @@ class VaeFinal_only_one_hidden(nn.Module):
         x = self.decode(z)
         return x, mu, sigma
 
+class VaeFinal_only_one_hidden_copy(nn.Module):
+    def __init__(self, LATTENT_SPACE=2, HIDDEN_1_LAYER=500):  # From paper hidden_units = 500 /
+        super().__init__()  # no overiffiting of superflouse latent variables,
+        # self.flatten = nn.Flatten(start_dim=1)
+        self.flatten = nn.Flatten()
+        self.img_to_hidden = nn.Linear(28 * 28, HIDDEN_1_LAYER)
 
+        self.hidden_to_mu = nn.Linear(HIDDEN_1_LAYER, LATTENT_SPACE)
+        self.hidden_to_sigma = nn.Linear(HIDDEN_1_LAYER, LATTENT_SPACE)
+
+        self.latent_to_hidden = nn.Linear(LATTENT_SPACE, HIDDEN_1_LAYER)
+        self.hidden_to_rec_img = nn.Linear(HIDDEN_1_LAYER, 28 * 28)
+        self.activation = nn.ReLU()
+        self.sigmoid = nn.Sigmoid()
+
+    def encode(self, x):
+        x = self.flatten(x)
+        x = self.activation(self.img_to_hidden(x))
+
+        # mu = self.sigmoid(self.hidden_to_mu(x))   #TODO normalize to -4 and 4 but not 0,1!
+        # sigma = self.sigmoid(self.hidden_to_sigma(x))
+        mu = (self.hidden_to_mu(x))  # TODO normalize to -4 and 4 but not 0,1!
+        sigma = (self.hidden_to_sigma(x))
+        return mu, sigma
+
+    def decode(self, z):
+        z = self.activation(self.latent_to_hidden(z))
+        # z = self.sigmoid(self.hidden_to_rec_img(z))# TODO normalize to -4 and 4 but not 0,1!
+        z = (self.hidden_to_rec_img(z))
+
+        return z
+
+    def forward(self, x):
+        mu, sigma = self.encode(x)
+        eps = torch.randn_like(sigma)  # == torch.randn_like(mu) == torch.randn_like(sigma)
+        z = mu + sigma * eps
+        # z = self.sigmoid(z)# TODO normalize to -4 and 4 but not 0,1!
+        # z = self.sigmoid(z)# TODO normalize to -4 and 4 but not 0,1!
+        x = self.decode(z)
+        return x, mu, sigma
 # class VaeFinal_CNN(nn.Module):
 #     def __init__(self,LATTENT_SPACE=2):
 #         super().__init__()
@@ -2049,3 +2088,39 @@ class MyModel5_retry_2classes_faster_4(nn.Module):
         x = self.fc2(x)
         # print(x.shape)
         return x
+
+class VaeFinal_only_one_hidden_copy_leakyrelu_for_momentum(nn.Module):
+    def __init__(self, LATTENT_SPACE=2, HIDDEN_1_LAYER=500):  # From paper hidden_units = 500 /
+        super().__init__()  # no overiffiting of superflouse latent variables,
+        # self.flatten = nn.Flatten(start_dim=1)
+        self.flatten = nn.Flatten()
+        self.img_to_hidden = nn.Linear(28 * 28, HIDDEN_1_LAYER)
+
+        self.hidden_to_mu = nn.Linear(HIDDEN_1_LAYER, LATTENT_SPACE)
+        self.hidden_to_sigma = nn.Linear(HIDDEN_1_LAYER, LATTENT_SPACE)
+
+        self.latent_to_hidden = nn.Linear(LATTENT_SPACE, HIDDEN_1_LAYER)
+        self.hidden_to_rec_img = nn.Linear(HIDDEN_1_LAYER, 28 * 28)
+        # self.activation = nn.ReLU()
+        self.activation = nn.LeakyReLU()
+        self.sigmoid = nn.Sigmoid()
+
+    def encode(self, x):
+        x = self.flatten(x)
+        x = self.activation(self.img_to_hidden(x))
+        mu = (self.hidden_to_mu(x))  # TODO normalize to -4 and 4 but not 0,1!
+        sigma = (self.hidden_to_sigma(x))
+        return mu, sigma
+
+    def decode(self, z):
+        z = self.activation(self.latent_to_hidden(z))
+        z = (self.hidden_to_rec_img(z))
+
+        return z
+
+    def forward(self, x):
+        mu, sigma = self.encode(x)
+        eps = torch.randn_like(sigma)  # == torch.randn_like(mu) == torch.randn_like(sigma)
+        z = mu + sigma * eps
+        x = self.decode(z)
+        return x, mu, sigma
