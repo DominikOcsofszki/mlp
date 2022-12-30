@@ -1,3 +1,4 @@
+import pandas
 from torchvision.transforms import transforms
 from torch.utils.data import Dataset
 from torchvision import datasets
@@ -123,6 +124,7 @@ class MyDataSets_Subset:
     def dataloader_test_subset_one_batch(self):
         return next(iter(self.test_loader_subset))
 
+
 class MyDataSets_Subset_4_9:
     def __init__(self, batch_size_train=32, batch_size_test=10000):
         print('MyDataSets.MyDataSets_Subset_4_9.__init__')
@@ -154,6 +156,7 @@ class MyDataSets_Subset_4_9:
         _train_idx = np.hstack(_train_idx_4 + _train_idx_9)
         self.train_loader_subset_changed_labels_size = _size_train = len(_train_idx)
         # print(f'{self.train_loader_subset_changed_labels_size = }')
+        if batch_size_train == -1: batch_size_train = self.train_loader_subset_changed_labels_size
         _train_subset_changed_labels_to_0_1 = torch.utils.data.Subset(_trainset_full, _train_idx)
         self.train_loader_subset_changed_labels = torch.utils.data.DataLoader(_train_subset_changed_labels_to_0_1,
                                                                               shuffle=True,
@@ -223,7 +226,7 @@ class MyDataSets_Subset_4:
         # Change class_nr: 4=>0, 9=>1
         _trainset_full.targets[_train_idx_4] = 0
 
-        _train_idx = np.hstack(_train_idx_4 )
+        _train_idx = np.hstack(_train_idx_4)
         self.train_loader_subset_changed_labels_size = _size_train = len(_train_idx)
         # print(f'{self.train_loader_subset_changed_labels_size = }')
         _train_subset_changed_labels_to_0_1 = torch.utils.data.Subset(_trainset_full, _train_idx)
@@ -237,7 +240,7 @@ class MyDataSets_Subset_4:
         # Change class_nr: 4=>0, 9=>1
         _testset_full.targets[_test_idx_4] = 0
 
-        _test_idx = np.hstack(_test_idx_4 )
+        _test_idx = np.hstack(_test_idx_4)
 
         self.test_loader_subset_changed_labels_size = len(_test_idx)
         _test_subset_changed_labels_to_0_1 = torch.utils.data.Subset(_testset_full, _test_idx)
@@ -265,6 +268,7 @@ class MyDataSets_Subset_4:
 
     def dataloader_test_subset_one_batch(self):
         return next(iter(self.dataloader_test_subset()))
+
 
 class MyDataSets_Subset_9:
     def __init__(self, batch_size_train=32, batch_size_test=10000):
@@ -292,7 +296,7 @@ class MyDataSets_Subset_9:
         # Change class_nr: 4=>0, 9=>1
         _trainset_full.targets[_train_idx_9] = 0
 
-        _train_idx = np.hstack(_train_idx_9 )
+        _train_idx = np.hstack(_train_idx_9)
         self.train_loader_subset_changed_labels_size = _size_train = len(_train_idx)
         # print(f'{self.train_loader_subset_changed_labels_size = }')
         _train_subset_changed_labels_to_0_1 = torch.utils.data.Subset(_trainset_full, _train_idx)
@@ -306,7 +310,7 @@ class MyDataSets_Subset_9:
         # Change class_nr: 4=>0, 9=>1
         _testset_full.targets[_test_idx_9] = 0
 
-        _test_idx = np.hstack(_test_idx_9 )
+        _test_idx = np.hstack(_test_idx_9)
 
         self.test_loader_subset_changed_labels_size = len(_test_idx)
         _test_subset_changed_labels_to_0_1 = torch.utils.data.Subset(_testset_full, _test_idx)
@@ -334,3 +338,72 @@ class MyDataSets_Subset_9:
 
     def dataloader_test_subset_one_batch(self):
         return next(iter(self.dataloader_test_subset()))
+
+
+import os
+import pandas as pd
+from torchvision.io import read_image
+
+
+class CustomDatasetCSV(Dataset):
+    def __init__(self, annotations_file, img_dir, transform=None, target_transform=None):
+        self.img_labels = pd.read_csv(annotations_file)
+        self.img_dir = img_dir
+        self.transform = transform
+        self.target_transform = target_transform
+
+    def __len__(self):
+        return len(self.img_labels)
+
+    def __getitem__(self, idx):
+        img_path = os.path.join(self.img_dir, self.img_labels.iloc[idx, 0])
+        image = read_image(img_path)
+        label = self.img_labels.iloc[idx, 1]
+        if self.transform:
+            image = self.transform(image)
+        if self.target_transform:
+            label = self.target_transform(label)
+        return image, label
+
+
+# class MyDataSet(Dataset)
+# class CustomDataset(Dataset):
+class MyCustomDataset(Dataset):
+    def __init__(self, df: pandas.DataFrame, transform=None, target_transform=None):
+        # self.img_labels = pd.read_csv(annotations_file)
+        # self.labels = df.
+        self.df = df
+        self.transform = transform
+        self.target_transform = target_transform
+
+    def __len__(self):
+        return len(self.df)
+
+    def __getitem__(self, idx):
+        z = torch.tensor((float(self.df['z0'].iloc[idx]), float(self.df['z1'].iloc[idx])))
+        label = torch.tensor(self.df['labels'].iloc[idx])
+        return z, label
+
+
+# class MyDataSet(Dataset)
+
+class CustomDatasetOld(Dataset):
+    def __init__(self, labels, z01: pandas.DataFrame, transform=None, target_transform=None):
+        # self.img_labels = pd.read_csv(annotations_file)
+        self.labels = labels
+        self.z01 = z01
+        self.transform = transform
+        self.target_transform = target_transform
+
+    def __len__(self):
+        return len(self.labels)
+
+    def __getitem__(self, idx):
+        z = self.z01['z0'].iloc[idx] + self.z01['z1']
+        label = self.labels.iloc[idx, 1]
+        # if self.transform:
+        #     image = self.transform(image)
+        # if self.target_transform:
+        #     label = self.target_transform(label)
+        return z, label
+# class MyDataSet(Dataset)

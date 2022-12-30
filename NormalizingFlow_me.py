@@ -135,6 +135,30 @@ def train_me(flow, optimizer, nb_epochs, log_density, batch_size, data_dim, MYDA
     return training_loss
 
 
+def train_me_2(flow, optimizer, nb_epochs, log_density, trainloader):
+    training_loss = []
+    for epoch in range(nb_epochs):
+        loop = tqdm(enumerate(trainloader))
+
+        for i, (Z, _) in loop:
+            z0 = Z.to(device)
+            zk, log_jacobian = flow(z0)
+
+            # Evaluate the exact and approximated densities
+            flow_log_density = gaussian_log_pdf(z0) - log_jacobian
+            exact_log_density = log_density(zk).to(device)
+
+            # Compute the loss
+            reverse_kl_divergence = (flow_log_density - exact_log_density).mean()
+            optimizer.zero_grad()
+            loss = reverse_kl_divergence
+            loss.backward()
+            optimizer.step()
+
+            training_loss.append(loss.item())
+    return training_loss
+
+
 def plot_flow_density(flow, ax, lims=np.array([[-4, 4], [-4, 4]]), cmap="coolwarm", title=None,
                       nb_point_per_dimension=1000):
     # Sample broadly from the latent space
@@ -205,15 +229,32 @@ if __name__ == "__main__":
     # rand_tensor = torch.rand(2)
     # helper.latent_rand_to_img(pick_model, rand_tensor)
 
+    #############################
+    #############################
 
-#############################
-#############################
-#############################
-#############################
+    import MyDataSet
+    import pandas as pd
+    import torch
+    import model
+
+    model_copy = model.VaeFinal_only_one_hidden_copy()
+    model_copy = helper.import_model_name_weights_copy(model_x=model_copy, activate_eval=True)
+    # dataset_test_4 = MyDataSet.MyDataSets_Subset_4(batch_size_train=-1)
+    with torch.no_grad():
+        dataset_49 = MyDataSet.MyDataSets_Subset_4_9(batch_size_train=-1)
+        img_49_batch, label_49_batch = next(iter(dataset_49.train_loader_subset_changed_labels))
+        rec49, mu49, sigma49 = model_copy(img_49_batch.clone())
+        z = mu49
+    df = pd.DataFrame({'z0': rec49[:, 0], 'z1': rec49[:, 1], 'labels': label_49_batch})
+    mcd = MyDataSet.MyCustomDataset(df)
+    BATCH_SIZE = 32
+    dataloader = torch.utils.data.DataLoader(dataset=mcd, batch_size=BATCH_SIZE)
+    #############################
+    #############################
 
     plt.figure(figsize=(12, 12))
     for U in [U1, U2, U3, U4]:
-    # for U in [U1]:
+        # for U in [U1]:
         # for U in [U1]:
         exact_log_density = lambda z: - U(z)
 
@@ -225,17 +266,22 @@ if __name__ == "__main__":
         index += 2
 
         # for flow_length in [2, 8, 32]:
-        for flow_length in [2,8,16,100]:
+        for flow_length in [1, 2, 4]:
             flow = NormalizingFlow(flow_length, data_dim).to(device)
             optimizer = torch.optim.Adam(flow.parameters(), lr=1e-2)
             # loss = train(flow, optimizer, 20000, exact_log_density, 4096, data_dim)
-            loss = train_me(flow, optimizer, 1, exact_log_density, 4096, data_dim,
-                            MYDATASETS_SUBSET_4_9=mydatasets_subset_4_9, model_latent_is_2=model)
+            # loss = train_me(flow, optimizer, 1, exact_log_density, 4096, data_dim,
+            #                 MYDATASETS_SUBSET_4_9=mydatasets_subset_4_9, model_latent_is_2=model)
+            loss = train_me_2(flow, optimizer, nb_epochs=10, log_density=exact_log_density,
+                              trainloader=dataloader)
+            print(f'{loss = }')
+            # train_me_2(flow, optimizer, nb_epochs, log_density, trainloader):
+
             # def train(flow, optimizer, nb_epochs, log_density, batch_size, data_dim):
 
             # Plot the learned density
-            ax = plt.subplot(5, 5, index);
-            plt.xticks([], []);
+            ax = plt.subplot(5, 5, index)
+            plt.xticks([], [])
             plt.yticks([], [])
             plot_flow_density(flow, ax, title=f'K={flow_length}' if index <= 5 else None)
             index += 1
