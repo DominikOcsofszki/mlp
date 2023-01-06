@@ -209,8 +209,8 @@ U4 = lambda z: - torch.log(1e-15 + torch.exp(-(((z[:, 1] - w1(z)) / 0.4) ** 2) /
     -(((z[:, 1] - w1(z) + w3(z)) / 0.35) ** 2) / 2))
 
 if __name__ == "__main__":
-    device = 'cpu';
-    data_dim = 2;
+    device = 'cpu'
+    data_dim = 2
     index = 1
 
     ##PREPING DATA and loading model
@@ -247,14 +247,14 @@ if __name__ == "__main__":
         z = mu49
     df = pd.DataFrame({'z0': rec49[:, 0], 'z1': rec49[:, 1], 'labels': label_49_batch})
     mcd = MyDataSet.MyCustomDataset(df)
-    BATCH_SIZE = 32
+    BATCH_SIZE = 128
     dataloader = torch.utils.data.DataLoader(dataset=mcd, batch_size=BATCH_SIZE)
     #############################
     #############################
 
     plt.figure(figsize=(12, 12))
-    for U in [U1, U2, U3, U4]:
-        # for U in [U1]:
+    # for U in [U1, U2, U3, U4]:
+    for U in [U1]:
         # for U in [U1]:
         exact_log_density = lambda z: - U(z)
 
@@ -265,16 +265,17 @@ if __name__ == "__main__":
         plot_exact_density(ax, exact_log_density, title=r'$\exp^{-U(z)}$' if index == 1 else None)
         index += 2
 
-        # for flow_length in [2, 8, 32]:
-        for flow_length in [1, 2, 4]:
+        # for flow_length in [32, 1, 1]:
+        for flow_length in [100]:
+        # for flow_length in [1, 2, 4]:
             flow = NormalizingFlow(flow_length, data_dim).to(device)
             optimizer = torch.optim.Adam(flow.parameters(), lr=1e-2)
             # loss = train(flow, optimizer, 20000, exact_log_density, 4096, data_dim)
             # loss = train_me(flow, optimizer, 1, exact_log_density, 4096, data_dim,
             #                 MYDATASETS_SUBSET_4_9=mydatasets_subset_4_9, model_latent_is_2=model)
-            loss = train_me_2(flow, optimizer, nb_epochs=10, log_density=exact_log_density,
+            loss = train_me_2(flow, optimizer, nb_epochs=50, log_density=exact_log_density,
                               trainloader=dataloader)
-            print(f'{loss = }')
+            # print(f'{loss = }')
             # train_me_2(flow, optimizer, nb_epochs, log_density, trainloader):
 
             # def train(flow, optimizer, nb_epochs, log_density, batch_size, data_dim):
@@ -287,5 +288,6 @@ if __name__ == "__main__":
             index += 1
     # plt.savefig('Imgs/learned_densities.pdf')
     # plt.show()
-    plt.savefig('NF_imgs/learned_densities_me_2.pdf')
+    count = 0
+    plt.savefig(f'NF_imgs/learned_densities_count_{count}.pdf')
     plt.show()

@@ -90,11 +90,11 @@ def set_params(BATCH_SIZE: int = 128, EPOCHS: int = 100, LR_RATE=0.0001):
     return BATCH_SIZE, EPOCHS, LR_RATE
 
 
-def set_debug_params(TEST_AFTER_EPOCH=11, COUNT_PRINTS=11, SHOW_SCATTER_EVERY=5):
+def set_debug_params(TEST_AFTER_EPOCH=11, COUNT_PRINTS=11, SHOW_SCATTER_EVERY=6):
     return TEST_AFTER_EPOCH, COUNT_PRINTS, SHOW_SCATTER_EVERY
 
 
-SHOW_COUNTERFACTUAL_EVERY = 2
+SHOW_COUNTERFACTUAL_EVERY = 10
 
 
 def set_model_params_2HIDDEN(LATTENT_SPACE=2, HIDDEN_1_LAYER=200, HIDDEN_2_LAYER=-99, LAYER_2_AS_IDENTITY=True):
@@ -174,18 +174,21 @@ with mlflow.start_run(run_name=RUN_SAVE_NAME):
 
     # calc_loss = nn.BCELoss(reduction='sum')
     # calc_loss = nn.L1Loss(reduction='sum')
-    calc_loss = nn.L1Loss(reduction='mean')
+    calc_loss = nn.L1Loss(reduction='sum')
     # calc_loss = nn.MSELoss(reduction='sum')
     count_in_epoch = 0
     TRAIN_VAE = True
-    use_2_classifier = False
-    use_2_classifier_after = 45
+    use_2_classifier = True
+    use_2_classifier_after = 1
     reconst_label_loss=torch.tensor(0)
 
     nr_of_classifier = 1
-    LABEL_FACTOR = 1 * 100000
-    REC_LOSS_FACTOR = 1 / nr_of_classifier * 100000
-    KL_DIV_FACTOR = 1 / BATCH_SIZE
+    LABEL_FACTOR = 10
+    REC_LOSS_FACTOR = 1
+    # REC_LOSS_FACTOR = 1 / nr_of_classifier
+    KL_DIV_FACTOR = 10
+
+    # KL_DIV_FACTOR = 1 / BATCH_SIZE
     if TRAIN_VAE:
         for epoch in range(EPOCHS):
             count_in_loop = 0
@@ -193,8 +196,8 @@ with mlflow.start_run(run_name=RUN_SAVE_NAME):
 
             if epoch == use_2_classifier_after :
                 use_2_classifier=True
-                REC_LOSS_FACTOR = 10
-                LABEL_FACTOR = 10
+                REC_LOSS_FACTOR = 1
+                LABEL_FACTOR = 1
 
             for i, (x, y) in loop:
                 # print(f'{y = }')
