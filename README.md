@@ -1,3 +1,19 @@
+Implementation of: "An Interpretable Deep Classifier for Counterfactual Generation" (without Inverse Autoregressive Flow)
+An Interpretable Deep Classifier for Counterfactual Generation
+https://dl.acm.org/doi/fullHtml/10.1145/3533271.3561722
+Understanding Counterfactual Generation using Maximum Mean Discrepancy
+https://dl.acm.org/doi/abs/10.1145/3533271.3561759
+Auto-Encoding Variational Bayes
+https://arxiv.org/abs/1312.6114
+CARLA: A Python Library to Benchmark Algorithmic Recourse and Counterfactual Explanation Algorithms
+https://arxiv.org/abs/2108.00783
+Review of deep learning: concepts, CNN architectures, challenges, applications, future directions
+https://journalofbigdata.springeropen.com/articles/10.1186/s40537-021-00444-8
+Improving Variational Inference with Inverse Autoregressive Flow
+https://arxiv.org/abs/1606.04934
+
+
+
 # mlp
 Machine Learning Current Topics
 
